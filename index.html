@@ -1,1022 +1,784 @@
- <!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduTrack AI - Career Point Hamirpur (CSE)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; }
-    .card { transition: all 0.3s ease; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-    .modal-bg { background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); }
-    video { border-radius: 12px; }
-    .selfie-preview { border: 4px solid #10b981; border-radius: 12px; }
-    .nav-btn { transition: all 0.2s ease; }
-    .nav-btn:hover { transform: translateY(-2px); }
-    .nav-btn.active { background: #1e40af !important; color: white !important; }
-    .dropdown-menu { animation: fadeIn 0.15s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-    .hero-gradient { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%); }
-    .stat-card { transition: all 0.3s ease; }
-    .stat-card:hover { transform: scale(1.03); }
-    .pulse-dot { animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .activity-item { animation: slideIn 0.3s ease; }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-    .teacher-card { cursor: pointer; }
-    .teacher-card:hover { border-color: #3b82f6 !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Point Hamirpur — Faculty Login</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --blue:#2563eb;
+    --blue2:#1e40af;
+    --txt:#1e293b;
+    --muted:#64748b;
+    --border:#e2e8f0;
+  }
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    min-height:100vh;
+    color:var(--txt);
+    background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 50%,#f0f9ff 100%);
+    background-attachment:fixed;
+  }
+
+  /* SPLASH */
+  #splash{
+    position:fixed;inset:0;z-index:200;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:0 24px;
+    background:linear-gradient(135deg,#ffffff 0%,#eff6ff 50%,#f0f9ff 100%);
+    transition:opacity .7s ease;
+  }
+  #splash.hide{opacity:0;pointer-events:none;}
+  .splash-logo{
+    width:132px;height:132px;position:relative;
+    animation:logoIn .9s cubic-bezier(.2,1.4,.5,1) both;
+  }
+  .splash-logo::after{
+    content:"";position:absolute;inset:-14px;border-radius:50%;
+    border:2px solid rgba(37,99,235,.35);animation:ring 2.2s ease-out infinite;
+  }
+  @keyframes logoIn{from{opacity:0;transform:scale(.4) rotate(-12deg);}to{opacity:1;transform:scale(1) rotate(0);}}
+  @keyframes ring{0%{transform:scale(1);opacity:.7;}100%{transform:scale(1.35);opacity:0;}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes shine{0%{background-position:-200% center;}100%{background-position:200% center;}}
+  @keyframes barFill{from{width:0;}to{width:100%;}}
+
+  .splash-welcome{
+    margin-top:26px;font-size:1.05rem;letter-spacing:7px;text-transform:uppercase;
+    color:var(--muted);font-weight:600;animation:fadeUp .8s .3s both;
+  }
+  .splash-faculty{
+    font-size:3.1rem;font-weight:800;letter-spacing:2px;line-height:1.1;
+    background:linear-gradient(90deg,#1e40af,#3b82f6,#1e40af);
+    background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:fadeUp .8s .5s both,shine 3s linear infinite;
+  }
+  .splash-line{
+    width:74px;height:3px;border-radius:99px;margin:18px auto;
+    background:linear-gradient(90deg,#2563eb,#8b5cf6);
+    animation:fadeUp .8s .7s both;
+  }
+  .splash-project{
+    font-size:.82rem;letter-spacing:2.4px;color:var(--blue2);font-weight:700;
+    padding:0 12px;animation:fadeUp .8s .9s both;
+  }
+  .splash-uni{
+    margin-top:8px;font-size:.72rem;color:var(--muted);letter-spacing:1px;
+    animation:fadeUp .8s 1.05s both;
+  }
+  .splash-bar{
+    margin-top:36px;width:220px;height:4px;border-radius:99px;
+    background:rgba(37,99,235,.15);overflow:hidden;
+    animation:fadeUp .8s 1.2s both;
+  }
+  .splash-bar-fill{
+    height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,#2563eb,#8b5cf6);
+    animation:barFill 2.4s .3s ease forwards;
+  }
+
+  /* HEADER */
+  header{
+    display:flex;align-items:center;gap:16px;
+    padding:18px 28px;
+    background:rgba(255,255,255,.9);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(12px);
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
+    position:sticky;top:0;z-index:50;flex-wrap:wrap;
+  }
+  .logo{
+    width:62px;height:62px;flex:0 0 62px;
+    filter:drop-shadow(0 4px 10px rgba(37,99,235,.18));
+  }
+  .head-text h1{
+    font-size:1.15rem;letter-spacing:.4px;font-weight:800;
+    background:linear-gradient(90deg,#1e40af,#2563eb);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .head-text p{font-size:.72rem;color:var(--muted);margin-top:3px;font-weight:500;}
+
+  main{max-width:1150px;margin:0 auto;padding:34px 20px 50px;}
+  .page-title{text-align:center;margin-bottom:8px;font-size:1.65rem;font-weight:800;color:var(--txt);}
+  .page-title span{color:var(--blue);}
+  .page-sub{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:32px;}
+
+  .grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(245px,1fr));
+  gap:16px;
+}
+
+  .card{
+    display:flex;align-items:center;gap:14px;
+    padding:15px 16px;border-radius:16px;cursor:pointer;
+    background:#ffffff;
+    border:2px solid var(--border);
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+    transition:all .22s ease;
+    position:relative;overflow:hidden;
+    text-align:left;font-family:inherit;color:inherit;width:100%;
+  }
+  .card::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(120deg,transparent 30%,rgba(37,99,235,.06) 50%,transparent 70%);
+    transform:translateX(-120%);transition:transform .6s ease;
+  }
+  .card:hover::after{transform:translateX(120%);}
+  .card:hover{
+    transform:translateY(-5px);
+    border-color:#3b82f6;
+    box-shadow:0 12px 28px rgba(37,99,235,.15),0 0 0 1px rgba(59,130,246,.2);
+  }
+  .card:active{transform:translateY(-2px) scale(.99);}
+
+  .avatar{
+  flex:0 0 60px;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  font-weight:800;
+  font-size:1.15rem;
+  color:#fff;
+  background:linear-gradient(140deg,#3b82f6,#1e40af);
+  box-shadow:0 4px 12px rgba(37,99,235,.3);
+  z-index:1;
+}
+
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:50%;
+}
+
+.avatar.av-hod{
+  background:linear-gradient(140deg,#22d3ee,#0891b2);
+}
+
+.avatar.av-dean{
+  background:linear-gradient(140deg,#a78bfa,#7c3aed);
+}
+  .card-info{z-index:1;min-width:0;flex:1;}
+  .card-info .name{
+    font-size:.96rem;font-weight:700;color:var(--txt);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:flex;align-items:center;gap:6px;
+  }
+  .card-info .cls{
+    display:inline-block;margin-top:5px;font-size:.68rem;letter-spacing:.5px;
+    padding:3px 9px;border-radius:999px;
+    background:#eff6ff;border:1px solid #bfdbfe;
+    color:#1e40af;text-transform:uppercase;font-weight:700;
+  }
+  .role-tag{
+    font-size:.55rem;padding:2px 6px;border-radius:6px;
+    letter-spacing:.6px;font-weight:800;margin-left:4px;
+  }
+  .role-tag.hod{background:#cffafe;color:#0e7490;border:1px solid #a5f3fc;}
+  .role-tag.dean{background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;}
+
+  .arrow{
+    margin-left:auto;color:#94a3b8;font-size:1.1rem;
+    z-index:1;transition:.22s;font-weight:700;
+  }
+  .card:hover .arrow{transform:translateX(4px);color:var(--blue);}
+
+  /* PASSWORD MODAL */
+  #pwModal{
+    position:fixed;inset:0;z-index:150;display:none;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(15,23,42,.55);
+    backdrop-filter:blur(6px);
+  }
+  #pwModal.show{display:flex;}
+
+  .pw-card{
+    width:100%;max-width:410px;padding:32px 28px 22px;
+    border-radius:22px;text-align:center;
+    background:#ffffff;
+    border:1px solid var(--border);
+    box-shadow:0 22px 60px rgba(15,23,42,.25);
+    animation:popIn .35s cubic-bezier(.2,1.4,.5,1);
+    color:var(--txt);
+  }
+  @keyframes popIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+   .pw-avatar{
+  width:74px;
+  height:74px;
+  margin:0 auto 15px;
+  border-radius:50%;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  font-size:1.75rem;
+  font-weight:800;
+  color:#fff;
+  background:linear-gradient(140deg,#3b82f6,#1e40af);
+  box-shadow:0 10px 24px rgba(37,99,235,.3);
+}
+  .pw-name{font-size:1.2rem;font-weight:800;color:var(--txt);}
+  .pw-badge{
+    display:inline-block;margin-top:8px;font-size:.68rem;
+    letter-spacing:.6px;font-weight:700;padding:4px 12px;
+    border-radius:999px;text-transform:uppercase;
+    background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;
+  }
+  .pw-divider{
+    height:1px;margin:20px 0 18px;
+    background:linear-gradient(90deg,transparent,#e2e8f0,transparent);
+  }
+  .pw-field{position:relative;}
+  .pw-field input{
+    width:100%;padding:14px 50px 14px 44px;border-radius:13px;
+    border:2px solid var(--border);background:#f8fafc;
+    color:var(--txt);font-size:.95rem;font-family:inherit;
+    letter-spacing:.4px;outline:none;transition:.2s;
+  }
+  .pw-field input::placeholder{color:#94a3b8;letter-spacing:normal;}
+  .pw-field input:focus{
+    border-color:var(--blue);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+    background:#ffffff;
+  }
+  .pw-lock{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    font-size:1rem;opacity:.55;
+  }
+  .pw-eye{
+    position:absolute;right:5px;top:50%;transform:translateY(-50%);
+    background:none;border:0;cursor:pointer;font-size:1.02rem;
+    padding:9px;color:#94a3b8;border-radius:8px;transition:.2s;
+  }
+  .pw-eye:hover{color:var(--blue);background:#eff6ff;}
+
+  .pw-btn{
+    width:100%;margin-top:13px;padding:14px;border:0;border-radius:13px;
+    font-family:inherit;font-size:.98rem;font-weight:800;
+    letter-spacing:1.4px;text-transform:uppercase;color:#ffffff;cursor:pointer;
+    background:linear-gradient(135deg,#3b82f6,#1e40af);
+    box-shadow:0 10px 24px rgba(37,99,235,.3);
+    transition:.18s;
+  }
+  .pw-btn:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.05);
+    box-shadow:0 16px 32px rgba(37,99,235,.42);
+  }
+  .pw-btn:active{transform:translateY(0) scale(.985);}
+
+  .pw-back{
+    margin-top:14px;background:none;border:0;color:var(--muted);
+    font-family:inherit;font-size:.84rem;cursor:pointer;
+    padding:8px 14px;border-radius:9px;transition:.2s;font-weight:600;
+  }
+  .pw-back:hover{color:var(--blue);background:#eff6ff;}
+
+  .pw-msg{min-height:20px;margin-top:12px;font-size:.83rem;font-weight:700;}
+  .pw-msg.err{color:#dc2626;}
+  .pw-msg.ok{color:#059669;}
+
+  .pw-hint{margin-top:14px;font-size:.7rem;color:var(--muted);font-weight:500;}
+  .pw-hint b{color:var(--blue);font-weight:800;}
+
+  .shake{animation:shake .42s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-9px);}
+    40%{transform:translateX(9px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+
+  .hint{
+    margin-top:24px;text-align:center;font-size:.78rem;color:var(--muted);
+    padding:12px 18px;border-radius:12px;
+    background:#eff6ff;border:1px solid #bfdbfe;
+    font-weight:600;display:inline-block;
+  }
+  .hint-wrap{text-align:center;}
+  .hint b{color:#1e40af;font-weight:800;letter-spacing:.5px;}
+
+  @media (max-width:520px){
+    header{padding:14px 16px;gap:12px;}
+    .logo{width:50px;height:50px;flex:0 0 50px;}
+    .head-text h1{font-size:1rem;}
+    .head-text p{font-size:.68rem;}
+    main{padding:24px 14px 40px;}
+    .page-title{font-size:1.35rem;}
+    .grid{grid-template-columns:1fr;}
+    .pw-card{padding:28px 20px 22px;}
+    .splash-faculty{font-size:2.4rem;}
+  }
+</style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+<body>
 
-<!-- MAIN APP -->
-<div id="mainApp">
-
-<!-- NAV BAR -->
-<div class="bg-white shadow-lg sticky top-0 z-40">
-  <div class="max-w-7xl mx-auto px-4 py-3">
-    <div class="flex justify-between items-center flex-wrap gap-3 mb-3">
-      <div class="flex items-center gap-3">
-        <div class="text-3xl">🎓</div>
-        <div>
-          <div class="font-bold text-slate-800 text-lg">EduTrack AI</div>
-          <div class="text-xs text-slate-500">Career Point Hamirpur · CSE</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <span id="loggedInUser" class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs font-semibold"></span>
-        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold">🚪 Logout</button>
-      </div>
-    </div>
-
-    <div class="flex gap-2 flex-wrap relative">
-      <button onclick="backToHome()" id="btn-home" class="nav-btn min-w-[80px] bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 border-slate-200">
-        <span class="text-xl">🏠</span><span class="hidden md:inline">Home</span>
-      </button>
-      <button onclick="window.location.href='hod.html'" id="btn-hod" class="nav-btn flex-1 min-w-[140px] bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 border-blue-200">
-        <span class="text-xl">👔</span><span>HOD</span>
-      </button>
-
-      <button onclick="openRolePanel('dean')" id="btn-dean" class="nav-btn flex-1 min-w-[140px] bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 border-purple-200">
-        <span class="text-xl">🎯</span><span>Dean</span>
-      </button>
-
-      <div class="flex-1 min-w-[140px] relative">
-        <button onclick="toggleTeacherDropdown(event)" id="btn-teachers" class="nav-btn w-full bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 border-green-200">
-          <span class="text-xl">👨‍🏫</span>
-          <span id="teacherCountLabel">Teachers</span>
-          <span id="teacherArrow" class="text-xs">▼</span>
-        </button>
-        <div id="teacherDropdown" class="hidden dropdown-menu absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border-2 border-green-200 z-50 max-h-96 overflow-y-auto">
-          <div class="p-2 bg-green-50 border-b-2 border-green-200 rounded-t-xl sticky top-0">
-            <div class="text-xs font-bold text-green-800 px-2">Click Any Teacher → Open Attendance</div>
-          </div>
-          <div id="teacherList" class="p-1"></div>
-        </div>
-      </div>
-    </div>
+<div id="splash">
+  <div class="splash-logo">
+    <svg viewBox="0 0 100 100" style="width:100%;height:100%;filter:drop-shadow(0 6px 18px rgba(37,99,235,.25));">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#1e40af"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#g1)"/>
+      <circle cx="50" cy="50" r="43" fill="none" stroke="#ffffff" stroke-width="2.5" opacity=".55"/>
+      <path d="M50 21 L82 35 L50 49 L18 35 Z" fill="#ffffff"/>
+      <path d="M50 49 L18 35 V41 L50 55 L82 41 V35 Z" fill="#ffffff" opacity=".85"/>
+      <path d="M74 38 V55" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="74" cy="59" r="4" fill="#ffffff"/>
+      <text x="50" y="80" text-anchor="middle" font-family="Georgia,serif" font-size="19" font-weight="700" fill="#1e40af">CPU</text>
+    </svg>
   </div>
+  <div class="splash-welcome">Welcome</div>
+  <div class="splash-faculty">Faculty</div>
+  <div class="splash-line"></div>
+  <div class="splash-project">AI BASED REPORTING PLATFORM FOR FACULTY</div>
+  <div class="splash-uni">Career Point University, Hamirpur · CSE</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
 </div>
 
-<!-- CONTENT -->
-<div id="contentArea" class="max-w-7xl mx-auto p-4">
+<div id="loginPage" style="display:none;">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" style="width:100%;height:100%;">
+        <defs>
+          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#1e40af"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#g2)"/>
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#ffffff" stroke-width="2.5" opacity=".55"/>
+        <path d="M50 21 L82 35 L50 49 L18 35 Z" fill="#ffffff"/>
+        <path d="M50 49 L18 35 V41 L50 55 L82 41 V35 Z" fill="#ffffff" opacity=".85"/>
+        <path d="M74 38 V55" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="74" cy="59" r="4" fill="#ffffff"/>
+        <text x="50" y="80" text-anchor="middle" font-family="Georgia,serif" font-size="19" font-weight="700" fill="#1e40af">CPU</text>
+      </svg>
+    </div>
+    <div class="head-text">
+      <h1>AI BASED REPORTING PLATFORM FOR FACULTY</h1>
+      <p>Career Point University, Hamirpur · CSE Department · 176044</p>
+    </div>
+  </header>
 
-  <!-- HOME -->
-  <div id="welcomeScreen" class="fade-in">
-    <div class="hero-gradient rounded-2xl shadow-2xl overflow-hidden mb-6">
-      <div class="p-6 md:p-10 text-white relative">
-        <div class="absolute top-0 right-0 opacity-10 text-[180px] leading-none font-bold select-none">💻</div>
-        <div class="relative z-10">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="w-2 h-2 bg-green-400 rounded-full pulse-dot"></span>
-            <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">CSE DEPARTMENT · LIVE</span>
-          </div>
-          <h1 class="text-2xl md:text-4xl font-bold mb-2">Welcome, <span id="welcomeName">Teacher</span>! 👋</h1>
-          <p class="text-sm md:text-base text-blue-100 max-w-2xl mb-5">Apni class select karo, selfie lo, aur attendance mark karo.</p>
-          <button onclick="toggleTeacherDropdown(event)" class="bg-white text-blue-800 hover:bg-blue-50 px-6 py-3 rounded-xl font-bold shadow-lg">👨‍🏫 Click Here → Select Your Name</button>
-        </div>
-      </div>
+  <main>
+    <h2 class="page-title">Faculty <span>Login</span></h2>
+    <p class="page-sub">Apna naam pe click karein → phir password daalein</p>
+    <div class="grid" id="grid"></div>
+    <div class="hint-wrap">
+      <div class="hint">🔑 Password for all faculty members: <b>123</b></div>
     </div>
-
-    <div class="mb-6">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-bold text-slate-800">📊 Today's Live Stats</h2>
-        <span class="text-xs text-slate-500 flex items-center gap-1">
-          <span class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></span>
-          <span id="statsUpdateTime">Live</span>
-        </span>
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-5 shadow-lg">
-          <div class="flex justify-between items-start mb-2"><div class="text-3xl">✅</div><div class="text-xs bg-white bg-opacity-25 px-2 py-0.5 rounded-full font-bold">TODAY</div></div>
-          <div class="text-4xl font-bold mb-1" id="heroStatFull">0</div>
-          <div class="text-sm opacity-90">Fully Marked</div>
-        </div>
-        <div class="stat-card bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-2xl p-5 shadow-lg">
-          <div class="flex justify-between items-start mb-2"><div class="text-3xl">⚠️</div><div class="text-xs bg-white bg-opacity-25 px-2 py-0.5 rounded-full font-bold">TODAY</div></div>
-          <div class="text-4xl font-bold mb-1" id="heroStatPartial">0</div>
-          <div class="text-sm opacity-90">Partial</div>
-        </div>
-        <div class="stat-card bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-2xl p-5 shadow-lg">
-          <div class="flex justify-between items-start mb-2"><div class="text-3xl">❌</div><div class="text-xs bg-white bg-opacity-25 px-2 py-0.5 rounded-full font-bold">TODAY</div></div>
-          <div class="text-4xl font-bold mb-1" id="heroStatAbsent">0</div>
-          <div class="text-sm opacity-90">Not Marked</div>
-        </div>
-        <div class="stat-card bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl p-5 shadow-lg">
-          <div class="flex justify-between items-start mb-2"><div class="text-3xl">👥</div><div class="text-xs bg-white bg-opacity-25 px-2 py-0.5 rounded-full font-bold">STUDENTS</div></div>
-          <div class="text-4xl font-bold mb-1" id="heroStatStudents">0</div>
-          <div class="text-sm opacity-90" id="heroStatStudentsLabel">of 900 present</div>
-          <div class="text-xs opacity-95 mt-1 font-semibold" id="heroStatStudentsAbsent">❌ Absent: 900</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 class="text-lg font-bold text-slate-800">📸 Teachers — Today's Reports</h2>
-        <span class="text-xs text-slate-500">Click a teacher card to open attendance</span>
-      </div>
-      <div id="teacherReportsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-slate-800">🔔 Recent Activity</h2>
-        <span class="text-xs text-slate-500">Today</span>
-      </div>
-      <div id="activityFeed" class="space-y-3 max-h-[340px] overflow-y-auto pr-1"></div>
-    </div>
-  </div>
-
-  <!-- TEACHER DASHBOARD -->
-  <div id="teacherDashboard" class="hidden">
-    <div class="bg-white rounded-2xl shadow-lg p-5 mb-4 flex justify-between items-center flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">Teacher Dashboard</h1>
-        <p id="teacherNameHeader" class="text-slate-500 text-sm"></p>
-        <button onclick="openTimetable()" class="mt-2 bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold">📅 View My Full Timetable</button>
-        <p id="teacherClassCount" class="text-blue-600 text-xs mt-1"></p>
-      </div>
-      <div class="flex gap-2 items-center">
-        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-semibold" id="todayDate"></span>
-      </div>
-    </div>
-    <div class="bg-white rounded-2xl shadow-lg p-5">
-      <h2 class="text-lg font-bold text-slate-800 mb-1">Today's Classes</h2>
-      <p class="text-xs text-slate-500 mb-4">Click a class → take selfie → mark attendance</p>
-      <div id="teacherClasses" class="space-y-3"></div>
-    </div>
-  </div>
-
-  <!-- HOD DASHBOARD (in-page) -->
-  <div id="hodDashboard" class="hidden">
-    <div class="bg-white rounded-2xl shadow-lg p-5 mb-4 flex justify-between items-center flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">HOD Dashboard</h1>
-        <p id="hodNameHeader" class="text-slate-500 text-sm"></p>
-      </div>
-      <div class="flex gap-2 items-center">
-        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-semibold" id="hodDate"></span>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="hodStatPresent">0</div><div class="text-sm">Fully Marked</div></div>
-      <div class="stat-card bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="hodStatPartial">0</div><div class="text-sm">Partial</div></div>
-      <div class="stat-card bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="hodStatAbsent">0</div><div class="text-sm">Not Marked</div></div>
-      <div class="stat-card bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="hodStatTotal">0</div><div class="text-sm">Teachers</div></div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-4 mb-4">
-      <div class="bg-white rounded-2xl shadow-lg p-5">
-        <h3 class="text-md font-bold text-slate-800 mb-3">🔔 Recent Activity</h3>
-        <div id="hodActivityFeed" class="space-y-2 max-h-[280px] overflow-y-auto pr-1"></div>
-      </div>
-      <div class="bg-white rounded-2xl shadow-lg p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-md font-bold text-slate-800">⚠️ Attention Needed</h3>
-          <span class="text-xs text-red-600 font-semibold" id="hodAlertCount">0 alerts</span>
-        </div>
-        <div id="hodAlertFeed" class="space-y-2 max-h-[280px] overflow-y-auto pr-1"></div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-lg p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-bold text-slate-800">👨‍🏫 All Teachers</h2>
-        <span class="text-xs text-slate-500" id="hodTeacherCount">0 teachers</span>
-      </div>
-      <div id="hodTeacherList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </div>
-  </div>
-
-  <!-- DEAN DASHBOARD -->
-  <div id="deanDashboard" class="hidden">
-    <div class="bg-white rounded-2xl shadow-lg p-5 mb-4 flex justify-between items-center flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">Dean Dashboard</h1>
-        <p id="deanNameHeader" class="text-slate-500 text-sm"></p>
-      </div>
-      <div class="flex gap-2 items-center">
-        <button onclick="downloadDeanReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Download Report</button>
-        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-semibold" id="deanDate"></span>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="deanStatPresent">0</div><div class="text-sm">Fully Marked</div></div>
-      <div class="stat-card bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="deanStatPartial">0</div><div class="text-sm">Partial</div></div>
-      <div class="stat-card bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="deanStatAbsent">0</div><div class="text-sm">Not Marked</div></div>
-      <div class="stat-card bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4 text-center"><div class="text-3xl font-bold" id="deanStatTotal">0</div><div class="text-sm">Total Teachers</div></div>
-    </div>
-    <div class="bg-white rounded-2xl shadow-lg p-5">
-      <h2 class="text-lg font-bold text-slate-800 mb-4">All Teachers — Today's Status</h2>
-      <div id="deanTeacherList" class="grid md:grid-cols-2 gap-3"></div>
-    </div>
-  </div>
-
+  </main>
 </div>
 
-<!-- SELFIE MODAL -->
-<div id="selfieModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 overflow-y-auto">
-  <div class="bg-white rounded-2xl p-5 w-full max-w-2xl my-4">
-    <div class="flex justify-between items-center mb-3">
-      <div><h3 class="text-lg font-bold text-slate-800" id="selfieTitle">Class</h3><p class="text-xs text-slate-500" id="selfieInfo"></p></div>
-      <button onclick="closeSelfie()" class="text-slate-400 hover:text-red-500 text-2xl font-bold">✕</button>
+<div id="pwModal">
+  <div class="pw-card" id="pwCard">
+    <div class="pw-avatar" id="pwAvatar">P</div>
+    <div class="pw-name" id="pwName">Name</div>
+    <div class="pw-badge" id="pwBadge">Class</div>
+    <div class="pw-divider"></div>
+    <div class="pw-field">
+      <span class="pw-lock">🔒</span>
+      <input id="pwInput" type="password" placeholder="Enter your password" autocomplete="off">
+      <button type="button" class="pw-eye" id="pwEye">👁️</button>
     </div>
-    <div class="grid grid-cols-2 gap-2 mb-3">
-      <div class="bg-blue-50 rounded-lg p-2 text-xs"><div class="text-slate-500 font-semibold">Date</div><div id="selfieDate" class="text-slate-800 font-bold">--</div></div>
-      <div class="bg-blue-50 rounded-lg p-2 text-xs"><div class="text-slate-500 font-semibold">Time</div><div id="selfieTime" class="text-slate-800 font-bold">--</div></div>
-    </div>
-    <div id="cameraArea" class="bg-slate-900 rounded-xl overflow-hidden mb-3 relative" style="aspect-ratio: 16/10;">
-      <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-      <div class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE</div>
-      <div class="absolute bottom-2 left-2 right-2 bg-black bg-opacity-60 text-white text-xs p-2 rounded">📸 Take selfie with students in the frame</div>
-    </div>
-    <div id="previewArea" class="hidden mb-3">
-      <img id="capturedPhoto" class="w-full selfie-preview">
-      <p class="text-xs text-center text-green-700 font-semibold mt-2">✓ Photo captured — check below &amp; confirm</p>
-    </div>
-    <div id="checkDoneSection" class="hidden mb-3 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl">
-      <div class="font-bold text-slate-800 mb-2 text-center">📋 Check Your Photo</div>
-      <p class="text-xs text-slate-600 mb-3 text-center">Photo theek hai? Agar haan toh Done dabao, warna Retake karo.</p>
-      <div class="flex gap-2">
-        <button onclick="retakePhoto()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold">🔄 Retake</button>
-        <button onclick="donePhoto()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold">✓ Done — Photo OK</button>
-      </div>
-    </div>
-    <canvas id="canvas" class="hidden"></canvas>
-    <div id="studentCountSection" class="hidden bg-slate-50 rounded-xl p-4 mb-3">
-      <div class="font-bold text-slate-800 mb-3 text-sm">👥 Student Attendance</div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-slate-600 font-semibold">Total</label><input id="totalStudents" type="number" min="1" class="w-full mt-1 p-2 border-2 border-amber-400 rounded-lg bg-amber-50 font-bold text-slate-800 focus:border-amber-600 outline-none"></div>
-        <div><label class="text-xs text-slate-600 font-semibold">Present</label><input id="presentStudents" type="number" min="0" placeholder="Enter count" class="w-full mt-1 p-2 border-2 border-blue-400 rounded-lg font-bold text-blue-700 focus:border-blue-600 outline-none"></div>
-      </div>
-      <div id="absentInfo" class="mt-2 text-xs text-slate-500"></div>
-    </div>
-    <div class="flex gap-2">
-      <button onclick="closeSelfie()" class="flex-1 bg-slate-300 hover:bg-slate-400 text-slate-800 py-3 rounded-lg font-semibold">Cancel</button>
-      <button id="captureBtn" onclick="capturePhoto()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold">📸 Capture Photo</button>
-      <button id="saveBtn" onclick="saveAttendance()" class="hidden flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold">✓ Save Attendance</button>
-    </div>
+    <div class="pw-msg" id="pwMsg"></div>
+    <button id="pwSubmit" class="pw-btn">Login</button>
+    <button id="pwBack" class="pw-back">← Back to faculty list</button>
+    <p class="pw-hint">Demo password: <b>123</b></p>
   </div>
-</div>
-
-<!-- PHOTO VIEW MODAL -->
-<div id="photoModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4" onclick="closePhoto()">
-  <div class="bg-white rounded-2xl p-5 max-w-lg w-full" onclick="event.stopPropagation()">
-    <img id="viewPhoto" class="rounded-xl w-full mb-3">
-    <div id="viewPhotoInfo" class="text-sm text-slate-600 space-y-1"></div>
-    <button onclick="closePhoto()" class="w-full mt-3 bg-slate-700 text-white py-2 rounded-lg">Close</button>
-  </div>
-</div>
-
-<!-- HISTORY MODAL -->
-<div id="historyModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 overflow-y-auto" onclick="closeHistory()">
-  <div class="bg-white rounded-2xl p-5 w-full max-w-4xl my-4" onclick="event.stopPropagation()">
-    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
-      <div class="flex items-center gap-3">
-        <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold" id="teacherAvatar">R</div>
-        <div><h3 class="text-xl font-bold text-slate-800" id="historyTitle">Teacher</h3><p class="text-xs text-slate-500" id="historySubtitle"></p></div>
-      </div>
-      <button onclick="closeHistory()" class="text-slate-400 hover:text-red-500 text-3xl font-bold leading-none">✕</button>
-    </div>
-    <div id="historySummary" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
-    <div class="mb-2 flex justify-between items-center"><h4 class="font-bold text-slate-800">📅 Last 5 Days</h4><span class="text-xs text-slate-500">Click photo to view</span></div>
-    <div id="historyContent" class="space-y-3 max-h-[55vh] overflow-y-auto pr-1"></div>
-  </div>
-</div>
-
 </div>
 
 <script>
-const CLASS_STRENGTH = {
-  'B.Tech CSE 7th': 60, 'B.Tech CSE 5th': 60, 'B.Tech CSE 3rd A': 60, 'B.Tech CSE 3rd B': 60,
-  'B.Tech CSE 1st A': 60, 'B.Tech CSE 1st B': 60,
-  'BCA 5th A': 55, 'BCA 5th B': 55, 'BCA 5th C': 55,
-  'BCA 3rd A': 50, 'BCA 3rd B': 50, 'BCA 1st A': 50, 'BCA 1st B': 50,
-  'MCA 3rd': 40, 'MCA 1st': 45, 'MSC IT 1st': 40,
-  'B.SC IT 5th': 45, 'B.SC CS 5th': 45,
-  'BCA 5th C/BSCIT/BSCCS': 55, 'BCA + MCA 5th': 55
-};
-const DEPT_TOTAL_STUDENTS = 900;
+    
+ const TEACHERS = [
 
-const TEACHERS = [
-  { id:'pratibha', name:'Dr. Pratibha',       email:'pratibha@cp.com', password:'123', subject:'B.Tech 7th',   dept:'CSE' },
-  { id:'krishma',  name:'Ms. Krishma Patiyal',email:'krishma@cp.com',  password:'123', subject:'B.Tech 5th',   dept:'CSE' },
-  { id:'anshul',   name:'Mr. Anshul',         email:'anshul@cp.com',   password:'123', subject:'B.Tech 3rd A', dept:'CSE' },
-  { id:'chandan',  name:'Dr. Chandan',        email:'chandan@cp.com',  password:'123', subject:'B.Tech 3rd B', dept:'CSE' },
-  { id:'neha',     name:'Dr. Neha',           email:'neha@cp.com',     password:'123', subject:'B.Tech 1st A', dept:'CSE' },
-  { id:'monika',   name:'Ms. Monika',         email:'monika@cp.com',   password:'123', subject:'B.Tech 1st B', dept:'CSE' },
-  { id:'vinod',    name:'Mr. Vinod',          email:'vinod@cp.com',    password:'123', subject:'BCA 5th A',    dept:'CSE' },
-  { id:'shiva',    name:'Ms. Shiva',          email:'shiva@cp.com',    password:'123', subject:'BCA 5th B',    dept:'CSE' },
-  { id:'ravinder', name:'Mr. Ravinder',       email:'ravinder@cp.com', password:'123', subject:'BCA 5th C',    dept:'CSE' },
-  { id:'ankit',    name:'Mr. Ankit',          email:'ankit@cp.com',    password:'123', subject:'BCA 3rd A',    dept:'CSE' },
-  { id:'raman',    name:'Mr. Raman',          email:'raman@cp.com',    password:'123', subject:'BCA 3rd B',    dept:'CSE' },
-  { id:'kushal',   name:'Mr. Kushal',         email:'kushal@cp.com',   password:'123', subject:'BCA 1st A',    dept:'CSE' },
-  { id:'nf2',      name:'NF2',                email:'nf2@cp.com',      password:'123', subject:'BCA 1st B',    dept:'CSE' },
-  { id:'gandharv', name:'Mr. Gandhrav',       email:'gandharv@cp.com', password:'123', subject:'MCA 3rd',      dept:'CSE' },
-  { id:'nitesh',   name:'Mr. Nitesh',         email:'nitesh@cp.com',   password:'123', subject:'MCA 1st',      dept:'CSE' }
+  {
+    id:'pratibha',
+    name:'Dr. Pratibha',
+    cls:'B.Tech 7th',
+    role:'teacher',
+    photo:'images/teachers/pratibha.jpg'
+  },
+
+  {
+    id:'krishma',
+    name:'Ms. Krishma Patiyal',
+    cls:'B.Tech 5th',
+    role:'teacher',
+    photo:'images/teachers/krishma.jpg'
+  },
+
+  {
+    id:'anshul',
+    name:'Mr. Anshul',
+    cls:'B.Tech 3rd A',
+    role:'teacher',
+    photo: 'https://picsum.photos/200'
+  },
+
+  {
+    id:'chandan',
+    name:'Dr. Chandan',
+    cls:'B.Tech 3rd B',
+    role:'teacher',
+    photo:'images/teachers/chandan.jpg'
+  },
+
+  {
+    id:'neha',
+    name:'Dr. Neha',
+    cls:'B.Tech 1st A',
+    role:'teacher',
+    photo:'images/teachers/neha.jpg'
+  },
+
+  {
+    id:'monika',
+    name:'Ms. Monika',
+    cls:'B.Tech 1st B',
+    role:'teacher',
+    photo:'images/teachers/monika.jpg'
+  },
+
+  {
+    id:'vinod',
+    name:'Mr. Vinod',
+    cls:'BCA 5th A',
+    role:'teacher',
+    photo:'images/teachers/vinod.jpg'
+  },
+
+  {
+    id:'shiva',
+    name:'Ms. Shiva',
+    cls:'BCA 5th B',
+    role:'teacher',
+    photo:'images/teachers/shiva.jpg'
+  },
+
+  {
+    id:'ravinder',
+    name:'Mr. Ravinder',
+    cls:'BCA 5th C',
+    role:'teacher',
+    photo:'images/teachers/ravinder.jpg'
+  },
+
+  {
+    id:'ankit',
+    name:'Mr. Ankit',
+    cls:'BCA 3rd A',
+    role:'teacher',
+    photo:'images/teachers/ankit.jpg'
+  },
+
+  {
+    id:'raman',
+    name:'Mr. Raman',
+    cls:'BCA 3rd B',
+    role:'teacher',
+    photo:' https://res.cloudinary.com/dtz0urit6/image/upload/q_auto:best,f_jpg/cloudinary-tools-uploads/vqz77uzsnjfe17e6egij.jpg'  
+  },
+
+  {
+    id:'kushal',
+    name:'Mr. Kushal',
+    cls:'BCA 1st A',
+    role:'teacher',
+    photo: 'https://picsum.photos/200'
+     
+  },
+
+  {
+    id:'nf2',
+    name:'NF2',
+    cls:'BCA 1st B',
+    role:'teacher',
+    photo:'images/teachers/nf2.jpg'
+  },
+
+  {
+    id:'gandharv',
+    name:'Mr. Gandhrav',
+    cls:'MCA 3rd',
+    role:'teacher',
+    photo:'images/teachers/gandharv.jpg'
+  },
+
+  {
+    id:'nitesh',
+    name:'Mr. Nitesh',
+    cls:'MCA 1st',
+    role:'teacher',
+    photo:'images/teachers/nitesh.jpg'
+  }
+
 ];
 
-const HODS = [{ id:'hod_cse', name:'Dr. CSE Head', email:'hod.cse@cp.com', password:'123', dept:'CSE' }];
-const DEANS = [{ id:'dean1', name:'Prof. V.K. Singh', email:'dean@cp.com', password:'123' }];
-
-let TIMETABLE = [];
-const PRATIBHA_TIMETABLE = [
-  { day:1, start:'09:15', end:'10:05', class:'BCA 5th C/BSCIT/BSCCS', subject:'CA251/271/643', room:'608' },
-  { day:1, start:'10:05', end:'10:55', class:'MSC IT 1st', subject:'CA502/512', room:'604' },
-  { day:1, start:'11:45', end:'12:35', class:'BCA 5th A', subject:'CA251', room:'606' },
-  { day:1, start:'13:25', end:'14:15', class:'BCA 5th B', subject:'CA251', room:'609' },
-  { day:2, start:'09:15', end:'10:05', class:'BCA 5th A', subject:'CA251', room:'608' },
-  { day:2, start:'10:05', end:'10:55', class:'B.Tech CSE 7th', subject:'CS405', room:'608' },
-  { day:2, start:'11:45', end:'12:35', class:'BCA 5th C/BSCIT/BSCCS', subject:'CA251/271/643', room:'612A' },
-  { day:2, start:'13:25', end:'14:15', class:'BCA 5th B', subject:'CA251', room:'609' },
-  { day:2, start:'14:15', end:'15:05', class:'MCA 1st', subject:'CA502/512', room:'604' },
-  { day:3, start:'09:15', end:'10:05', class:'BCA 5th B', subject:'CA251', room:'709' },
-  { day:3, start:'10:05', end:'10:55', class:'MCA 1st', subject:'CA502/512', room:'604' },
-  { day:4, start:'09:15', end:'10:05', class:'BCA 5th A', subject:'CA251', room:'610B' },
-  { day:4, start:'11:45', end:'12:35', class:'BCA 5th C/BSCIT/BSCCS', subject:'CA251/271/643', room:'612A' },
-  { day:4, start:'13:25', end:'14:15', class:'B.Tech CSE 7th', subject:'CS405', room:'604' },
-  { day:5, start:'10:05', end:'10:55', class:'MCA 1st', subject:'CA502/512', room:'604' },
-  { day:6, start:'09:15', end:'10:05', class:'MCA 1st', subject:'CA502/512', room:'604' },
-  { day:6, start:'13:25', end:'14:15', class:'B.Tech CSE 7th', subject:'CS405', room:'606' }
+const HODS = [
+  {
+    id:'hod_cse',
+    name:'Dr. CSE Head',
+    cls:'HOD · CSE',
+    role:'hod',
+    photo:'images/teachers/hod_cse.jpg'
+  }
 ];
-PRATIBHA_TIMETABLE.forEach(c => TIMETABLE.push(Object.assign({ teacherId:'pratibha' }, c)));
 
-(function generateDefaultTimetable(){
-  const slots = [
-    { start:'09:15', end:'10:05' }, { start:'10:05', end:'10:55' }, { start:'10:55', end:'11:45' },
-    { start:'11:45', end:'12:35' }, { start:'13:25', end:'14:15' }, { start:'14:15', end:'15:05' }
-  ];
-  const classList = ['B.Tech CSE 7th','B.Tech CSE 5th','B.Tech CSE 3rd A','B.Tech CSE 3rd B','B.Tech CSE 1st A','B.Tech CSE 1st B','BCA 5th A','BCA 5th B','BCA 3rd A','MCA 3rd','MCA 1st'];
-  const subjects = ['Data Structures','DBMS','OS','Networks','ML','Web Dev','Python','Java','C Programming','Algorithms'];
-  TEACHERS.forEach((t, ti) => {
-    if (t.id === 'pratibha') return;
-    for (let day = 1; day <= 6; day++) {
-      const count = 1 + ((ti + day) % 3);
-      for (let c = 0; c < count; c++) {
-        const slot = slots[(ti + day + c) % slots.length];
-        TIMETABLE.push({
-          teacherId: t.id, day: day, start: slot.start, end: slot.end,
-          class: classList[(ti + c) % classList.length],
-          subject: subjects[(ti + c) % subjects.length],
-          room: 'CS-' + (100 + (ti % 5))
-        });
-      }
-    }
-  });
-})();
-
-let currentUser = null;
-let activeClass = null;
-let capturedPhotoData = null;
-let cameraStream = null;
-let attendance = {};
-try { attendance = JSON.parse(localStorage.getItem('attendance_v8') || '{}'); } catch(e){ attendance = {}; }
-
-const today = new Date().toISOString().split('T')[0];
-const todayDay = new Date().getDay();
-
-function saveSession(user){ try{ localStorage.setItem('edutrack_session', JSON.stringify({ role: user.role, id: user.id })); }catch(e){} }
-function clearSession(){ try{ localStorage.removeItem('edutrack_session'); }catch(e){} }
-function loadSession(){ try{ const s = localStorage.getItem('edutrack_session'); if(!s) return null; return JSON.parse(s); }catch(e){ return null; } }
-
-function formatDate(d){ return d.toLocaleDateString('en-IN', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }); }
-function formatTime(d){ return d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }); }
-function getDayName(d){ return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d]; }
-function initials(name){ return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
-
-function getTodayClassesFor(teacherId){
-  let list = TIMETABLE.filter(t => t.teacherId === teacherId && t.day === todayDay);
-  if (list.length === 0) list = TIMETABLE.filter(t => t.teacherId === teacherId && t.day === 1);
-  list.sort((a,b) => a.start.localeCompare(b.start));
-  return list;
-}
-function getTeacherStatusToday(teacherId){
-  const classes = getTodayClassesFor(teacherId);
-  if (classes.length === 0) return { status:'no-classes', total:0, done:0, classes:[] };
-  const records = attendance[today] || {};
-  const marked = classes.filter(c => records[teacherId + '_' + c.day + '_' + c.start]);
-  if (marked.length === 0) return { status:'absent', total:classes.length, done:0, classes };
-  if (marked.length === classes.length) return { status:'full', total:classes.length, done:marked.length, classes };
-  return { status:'partial', total:classes.length, done:marked.length, classes };
-}
-function getTeacherTodayReport(teacherId){
-  const tr = attendance[today] || {};
-  for (const k in tr) { if (tr[k].teacherId === teacherId) return tr[k]; }
-  return null;
-}
-
-function loginSuccess(user){
-  currentUser = user;
-  saveSession(user);
-  document.getElementById('mainApp').classList.remove('hidden');
-  const lbl = { 'teacher':'👨‍🏫', 'hod':'👔', 'dean':'🎯' }[user.role];
-  document.getElementById('loggedInUser').textContent = lbl + ' ' + user.name;
-  document.getElementById('welcomeName').textContent = user.name;
-  backToHome();
-}
-
-function logout(){
-  if (!confirm('Logout?')) return;
-  clearSession();
-  window.location.href = 'start.html';
-}
-
-function openRolePanel(role){
-  document.getElementById('welcomeScreen').classList.add('hidden');
-  document.getElementById('teacherDashboard').classList.add('hidden');
-  document.getElementById('hodDashboard').classList.add('hidden');
-  document.getElementById('deanDashboard').classList.add('hidden');
-  document.getElementById('btn-hod').classList.remove('active');
-  document.getElementById('btn-dean').classList.remove('active');
-  document.getElementById('btn-teachers').classList.remove('active');
-  document.getElementById('btn-home').classList.remove('active');
-
-  if (role === 'teacher') {
-    if (!currentUser || currentUser.role !== 'teacher') { toggleTeacherDropdown(); return; }
-    document.getElementById('btn-teachers').classList.add('active');
-    showTeacherDashboard();
-  } else if (role === 'hod') {
-    if (!currentUser || currentUser.role !== 'hod') { alert('❌ Only HOD can access.'); return; }
-    document.getElementById('btn-hod').classList.add('active');
-    showHodDashboard();
-  } else if (role === 'dean') {
-    if (!currentUser || currentUser.role !== 'dean') { alert('❌ Only Dean can access.'); return; }
-    document.getElementById('btn-dean').classList.add('active');
-    showDeanDashboard();
+const DEANS = [
+  {
+    id:'dean1',
+    name:'Prof.  Mr. Anshul',
+    cls:'Dean',
+    role:'dean',
+    photo:'images/teachers/dean1.jpg'
   }
+];
+
+const PASSWORD = '123';
+
+function initial(name){
+  return name.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.|Miss)\s*/i,'').charAt(0).toUpperCase() || '?';
 }
 
-function backToHome(){
-  document.getElementById('welcomeScreen').classList.remove('hidden');
-  document.getElementById('teacherDashboard').classList.add('hidden');
-  document.getElementById('hodDashboard').classList.add('hidden');
-  document.getElementById('deanDashboard').classList.add('hidden');
-  document.getElementById('btn-hod').classList.remove('active');
-  document.getElementById('btn-dean').classList.remove('active');
-  document.getElementById('btn-teachers').classList.remove('active');
-  document.getElementById('btn-home').classList.add('active');
-  renderWelcomeData();
+ function cardHTML(u){
+
+  const av =
+    u.role === 'hod'
+      ? 'av-hod'
+      : u.role === 'dean'
+        ? 'av-dean'
+        : '';
+
+  const tag =
+    u.role === 'hod'
+      ? '<span class="role-tag hod">HOD</span>'
+      : u.role === 'dean'
+        ? '<span class="role-tag dean">DEAN</span>'
+        : '';
+
+  const fallback = initial(u.name);
+
+  const photoHTML = u.photo
+    ? `
+      <img
+        src="${u.photo}"
+        alt="${u.name}"
+        onerror="
+          this.style.display='none';
+          this.parentElement.textContent='${fallback}';
+        "
+      >
+    `
+    : fallback;
+
+  return `
+    <button
+      type="button"
+      class="card"
+      onclick="openPw('${u.role}','${u.id}')"
+    >
+
+      <div class="avatar ${av}">
+        ${photoHTML}
+      </div>
+
+      <div class="card-info">
+
+        <div class="name">
+          ${u.name} ${tag}
+        </div>
+
+        <div class="cls">
+          ${u.cls}
+        </div>
+
+      </div>
+
+      <div class="arrow">
+        ›
+      </div>
+
+    </button>
+  `;
 }
 
-function renderTeacherList(){
-  document.getElementById('teacherCountLabel').textContent = 'Teachers (' + TEACHERS.length + ')';
-  document.getElementById('teacherList').innerHTML = TEACHERS.map(t => {
-    const init = initials(t.name);
-    const rep = getTeacherTodayReport(t.id);
-    const thumb = rep
-      ? '<img src="' + rep.photo + '" class="w-9 h-9 rounded object-cover border-2 border-green-500 flex-shrink-0">'
-      : '<span class="text-[10px] text-slate-400">—</span>';
-    return '<button onclick="selectTeacher(\'' + t.id + '\')" class="w-full text-left p-2 hover:bg-green-50 rounded-lg flex items-center gap-3 transition">' +
-      '<div class="bg-gradient-to-br from-blue-500 to-cyan-500 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">' + init + '</div>' +
-      '<div class="flex-1 min-w-0"><div class="font-semibold text-slate-800 text-sm truncate">' + t.name + '</div><div class="text-xs text-slate-500 truncate">' + t.subject + '</div></div>' +
-      thumb + '<div class="text-xs text-slate-400">→</div></button>';
-  }).join('');
+function buildGrid(){
+  let html = '';
+  DEANS.forEach(d => html += cardHTML(d));
+  HODS.forEach(h => html += cardHTML(h));
+  TEACHERS.forEach(t => html += cardHTML(t));
+  document.getElementById('grid').innerHTML = html;
 }
-function toggleTeacherDropdown(e){
-  if (e) e.stopPropagation();
-  const dd = document.getElementById('teacherDropdown');
-  const arr = document.getElementById('teacherArrow');
-  if (dd.classList.contains('hidden')) { renderTeacherList(); dd.classList.remove('hidden'); arr.textContent = '▲'; }
-  else { dd.classList.add('hidden'); arr.textContent = '▼'; }
-}
-function closeTeacherDropdown(){
-  document.getElementById('teacherDropdown').classList.add('hidden');
-  document.getElementById('teacherArrow').textContent = '▼';
-}
-function selectTeacher(id){
-  closeTeacherDropdown();
-  const t = TEACHERS.find(x => x.id === id);
-  if (!t) return;
-  currentUser = Object.assign({ role: 'teacher' }, t);
-  saveSession(currentUser);
-  document.getElementById('loggedInUser').textContent = '👨‍🏫 ' + t.name;
-  document.getElementById('welcomeName').textContent = t.name;
-  openRolePanel('teacher');
-}
-document.addEventListener('click', function(e){
-  const dd = document.getElementById('teacherDropdown');
-  const btn = document.getElementById('btn-teachers');
-  if (!dd.classList.contains('hidden') && !dd.contains(e.target) && !btn.contains(e.target)) closeTeacherDropdown();
-});
 
-function renderWelcomeData(){
-  let full = 0, partial = 0, absent = 0;
-  const classPresentMap = {};
-  TEACHERS.forEach(t => {
-    const s = getTeacherStatusToday(t.id);
-    if (s.status === 'full') full++; else if (s.status === 'partial') partial++; else if (s.status === 'absent') absent++;
-    s.classes.forEach(c => {
-      const r = (attendance[today] || {})[t.id + '_' + c.day + '_' + c.start];
-      if (r && (!classPresentMap[c.class] || classPresentMap[c.class] < r.presentStudents)) classPresentMap[c.class] = r.presentStudents;
-    });
-  });
-  let totalPresent = 0;
-  for (const cls in classPresentMap) totalPresent += classPresentMap[cls];
-  const totalAbsent = Math.max(0, DEPT_TOTAL_STUDENTS - totalPresent);
+let pendingUser = null;
 
-  document.getElementById('heroStatFull').textContent = full;
-  document.getElementById('heroStatPartial').textContent = partial;
-  document.getElementById('heroStatAbsent').textContent = absent;
-  document.getElementById('heroStatStudents').textContent = totalPresent;
-  document.getElementById('heroStatStudentsLabel').textContent = 'of ' + DEPT_TOTAL_STUDENTS + ' present';
-  document.getElementById('heroStatStudentsAbsent').textContent = '❌ Absent: ' + totalAbsent;
-  document.getElementById('statsUpdateTime').textContent = 'Updated ' + formatTime(new Date());
+ function openPw(role, id){
 
-  document.getElementById('teacherReportsGrid').innerHTML = TEACHERS.map(t => {
-    const rep = getTeacherTodayReport(t.id);
-    const init = initials(t.name);
-    if (rep) {
-      return '<div class="card rounded-xl border-2 border-green-400 bg-green-50 p-2 cursor-pointer" onclick="selectTeacher(\'' + t.id + '\')">' +
-        '<img src="' + rep.photo + '" class="w-full h-24 object-cover rounded-lg mb-2 border-2 border-green-500">' +
-        '<div class="text-xs font-bold text-slate-800 truncate">' + t.name + '</div>' +
-        '<div class="text-[10px] text-green-700 font-semibold">✓ ' + rep.presentStudents + '/' + rep.totalStudents + ' • ' + rep.time + '</div></div>';
-    }
-    return '<div class="card rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-2 cursor-pointer" onclick="selectTeacher(\'' + t.id + '\')">' +
-      '<div class="w-full h-24 flex items-center justify-center rounded-lg mb-2 bg-slate-100">' +
-      '<div class="bg-gradient-to-br from-slate-400 to-slate-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm">' + init + '</div></div>' +
-      '<div class="text-xs font-bold text-slate-700 truncate">' + t.name + '</div>' +
-      '<div class="text-[10px] text-blue-600 font-semibold">👆 Click to open</div></div>';
-  }).join('');
+  let u;
 
-  const acts = [];
-  const tr = attendance[today] || {};
-  Object.keys(tr).forEach(k => {
-    const r = tr[k];
-    acts.push({ time: r.time, ts: r.timestamp, teacher: r.teacherName, cls: r.className, pr: r.presentStudents, tt: r.totalStudents, photo: r.photo, id: r.id });
-  });
-  acts.sort((a,b) => new Date(b.ts) - new Date(a.ts));
-  const feed = document.getElementById('activityFeed');
-  if (acts.length === 0) {
-    feed.innerHTML = '<div class="text-center py-8"><div class="text-4xl mb-2">📭</div><div class="text-slate-500 text-sm">No activity yet today</div></div>';
-  } else {
-    feed.innerHTML = acts.slice(0, 8).map(a => {
-      return '<div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-blue-50 transition cursor-pointer" onclick="openPhoto(\'' + a.id + '\')">' +
-        '<div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">' + initials(a.teacher) + '</div>' +
-        '<div class="flex-1 min-w-0"><div class="text-sm font-semibold text-slate-800 truncate">' + a.teacher + ' → <span class="text-blue-600">' + a.cls + '</span></div><div class="text-xs text-slate-500">⏰ ' + a.time + ' • 👥 ' + a.pr + '/' + a.tt + '</div></div>' +
-        '<img src="' + a.photo + '" class="w-10 h-10 rounded object-cover border-2 border-green-500 flex-shrink-0"></div>';
-    }).join('');
+  if(role === 'teacher'){
+    u = TEACHERS.find(x => x.id === id);
   }
+  else if(role === 'hod'){
+    u = HODS.find(x => x.id === id);
+  }
+  else{
+    u = DEANS.find(x => x.id === id);
+  }
+
+  if(!u) return;
+
+  pendingUser = {
+    role: role,
+    id: u.id,
+    name: u.name,
+    cls: u.cls,
+    photo: u.photo || ''
+  };
+
+  const av = document.getElementById('pwAvatar');
+
+  /*
+     Teacher photo in password popup
+  */
+  if(u.photo){
+
+    av.innerHTML = `
+      <img
+        src="${u.photo}"
+        alt="${u.name}"
+        style="
+          width:100%;
+          height:100%;
+          object-fit:cover;
+          border-radius:50%;
+          display:block;
+        "
+        onerror="
+          this.style.display='none';
+          this.parentElement.textContent='${initial(u.name)}';
+        "
+      >
+    `;
+
+  }else{
+
+    av.textContent = initial(u.name);
+
+  }
+
+  /*
+     Different avatar color for HOD / Dean
+  */
+  av.style.background =
+    role === 'hod'
+      ? 'linear-gradient(140deg,#22d3ee,#0891b2)'
+      : role === 'dean'
+        ? 'linear-gradient(140deg,#a78bfa,#7c3aed)'
+        : 'linear-gradient(140deg,#3b82f6,#1e40af)';
+
+  document.getElementById('pwName').textContent = u.name;
+
+  document.getElementById('pwBadge').textContent = u.cls;
+
+  const inp = document.getElementById('pwInput');
+
+  inp.value = '';
+  inp.type = 'password';
+
+  document.getElementById('pwEye').textContent = '👁️';
+
+  const msg = document.getElementById('pwMsg');
+
+  msg.textContent = '';
+  msg.className = 'pw-msg';
+
+  document.getElementById('pwModal').classList.add('show');
+
+  setTimeout(() => inp.focus(), 100);
 }
 
-function showTeacherDashboard(){
-  document.getElementById('teacherDashboard').classList.remove('hidden');
-  document.getElementById('teacherNameHeader').textContent = currentUser.name + ' • ' + currentUser.subject;
-  document.getElementById('todayDate').textContent = formatDate(new Date());
-  renderTeacherClasses();
+function closePw(){
+  document.getElementById('pwModal').classList.remove('show');
+  pendingUser = null;
 }
-function renderTeacherClasses(){
-  const div = document.getElementById('teacherClasses');
-  const my = getTodayClassesFor(currentUser.id);
-  const isFallback = (my.length > 0 && todayDay === 0);
-  if (my.length === 0) {
-    div.innerHTML = '<p class="text-slate-400 text-center py-8">No classes scheduled</p>';
-    document.getElementById('teacherClassCount').textContent = '';
+
+function submitPw(){
+  if(!pendingUser) return;
+  const v = document.getElementById('pwInput').value.trim();
+  const msg = document.getElementById('pwMsg');
+
+  if(v === ''){
+    msg.textContent = 'Please enter your password';
+    msg.className = 'pw-msg err';
     return;
   }
-  document.getElementById('teacherClassCount').textContent = (isFallback ? '(Showing Monday) ' : '') + my.length + ' classes today';
 
-  div.innerHTML = my.map(c => {
-    const key = currentUser.id + '_' + c.day + '_' + c.start;
-    const rec = (attendance[today] || {})[key];
-    const isDone = !!rec;
-    let rightSide = '';
-    if (isDone) {
-      rightSide = '<div class="text-center"><img src="' + rec.photo + '" onclick="openPhoto(\'' + rec.id + '\')" class="w-24 h-24 rounded-lg object-cover border-2 border-green-500 cursor-pointer selfie-preview">' +
-        '<div class="text-xs text-green-700 font-bold mt-1">✓ Present</div>' +
-        '<button onclick="retakeAttendance(\'' + c.start + '\', ' + c.day + ')" class="text-xs text-blue-600 underline">Re-take</button></div>';
-    } else {
-      rightSide = '<button onclick="openSelfie(\'' + c.start + '\', ' + c.day + ', \'' + c.class.replace(/\'/g,'') + '\', \'' + c.subject.replace(/\'/g,'') + '\', \'' + c.room + '\', \'' + c.start + ' - ' + c.end + '\')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-4 rounded-lg font-bold flex flex-col items-center gap-1"><span class="text-xl">📸</span><span class="text-xs">Selfie + Mark</span></button>';
-    }
-    const doneBadge = isDone ? '<span class="bg-green-600 text-white text-xs px-2 py-1 rounded font-bold">✓ MARKED</span>' : '<span class="bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">PENDING</span>';
-    const infoBlock = isDone ? '<div class="mt-3 flex items-center gap-3 flex-wrap"><div class="bg-white rounded-lg px-3 py-2 border-2 border-green-300"><div class="text-[10px] text-slate-500 font-semibold">STUDENTS PRESENT</div><div class="text-xl font-bold text-green-700">' + rec.presentStudents + ' <span class="text-sm text-slate-400">/ ' + rec.totalStudents + '</span></div></div><div class="text-xs text-slate-500"><div>📅 ' + rec.dateFormatted + '</div><div>⏱️ ' + rec.time + '</div></div></div>' : '';
+  if(v === PASSWORD){
+    msg.textContent = '✅ Login successful! Redirecting...';
+    msg.className = 'pw-msg ok';
 
-    return '<div class="card p-4 rounded-xl border-2 ' + (isDone ? 'border-green-500 bg-green-50' : 'border-slate-200 bg-white') + '">' +
-      '<div class="flex justify-between items-start flex-wrap gap-3">' +
-      '<div class="flex-1 min-w-[200px]">' +
-      '<div class="flex items-center gap-2 mb-1 flex-wrap">' +
-      '<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">' + c.class + '</span>' +
-      '<span class="text-xs text-slate-500">Room ' + c.room + '</span>' + doneBadge + '</div>' +
-      '<div class="font-semibold text-slate-800">' + c.subject + '</div>' +
-      '<div class="text-sm text-slate-600">⏰ ' + c.start + ' - ' + c.end + '</div>' + infoBlock + '</div>' +
-      '<div class="flex gap-2 items-center">' + rightSide + '</div></div></div>';
-  }).join('');
-}
+     localStorage.setItem('edutrack_session', JSON.stringify({
 
-function resetCameraArea(){
-  document.getElementById('cameraArea').innerHTML =
-    '<video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>' +
-    '<div class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE</div>' +
-    '<div class="absolute bottom-2 left-2 right-2 bg-black bg-opacity-60 text-white text-xs p-2 rounded">📸 Take selfie with students in the frame</div>';
-}
-async function startCamera(){
-  if (!document.getElementById('video')) resetCameraArea();
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} } });
-    const v = document.getElementById('video');
-    if (v) v.srcObject = cameraStream;
-  } catch (err) {
-    document.getElementById('cameraArea').innerHTML = '<div class="w-full h-full flex items-center justify-center text-white text-center p-4"><div><div class="text-4xl mb-2">📷</div><div class="text-sm">Camera not available — Live Server (localhost) par chalayein</div></div></div>';
+  role: pendingUser.role,
+
+  id: pendingUser.id,
+
+  name: pendingUser.name,
+
+  cls: pendingUser.cls,
+
+  photo: pendingUser.photo
+
+}));
+
+    setTimeout(()=>{ window.location.href = 'home.html'; }, 700);
+    
+  } else {
+    msg.textContent = '❌ Incorrect password. Try 123';
+    msg.className = 'pw-msg err';
+    const c = document.getElementById('pwCard');
+    c.classList.add('shake');
+    setTimeout(()=>c.classList.remove('shake'), 430);
+    document.getElementById('pwInput').select();
   }
 }
-async function openSelfie(classKey, day, className, subject, room, time){
-  activeClass = { classKey, day, className, subject, room, time };
-  capturedPhotoData = null;
-  document.getElementById('selfieTitle').textContent = className + ' — ' + subject;
-  document.getElementById('selfieInfo').textContent = 'Room ' + room + ' • ' + time;
-  document.getElementById('totalStudents').value = CLASS_STRENGTH[className] || 50;
-  document.getElementById('presentStudents').value = '';
-  document.getElementById('absentInfo').textContent = '';
-  resetCameraArea();
-  document.getElementById('cameraArea').classList.remove('hidden');
-  document.getElementById('previewArea').classList.add('hidden');
-  document.getElementById('checkDoneSection').classList.add('hidden');
-  document.getElementById('studentCountSection').classList.add('hidden');
-  document.getElementById('captureBtn').classList.remove('hidden');
-  document.getElementById('saveBtn').classList.add('hidden');
-  document.getElementById('selfieModal').classList.remove('hidden');
-  updateSelfieDT();
-  if (window.selfieInterval) clearInterval(window.selfieInterval);
-  window.selfieInterval = setInterval(updateSelfieDT, 1000);
-  await startCamera();
-}
-function updateSelfieDT(){
-  const n = new Date();
-  document.getElementById('selfieDate').textContent = formatDate(n);
-  document.getElementById('selfieTime').textContent = formatTime(n);
-}
-function closeSelfie(){
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-  if (window.selfieInterval) clearInterval(window.selfieInterval);
-  document.getElementById('selfieModal').classList.add('hidden');
-  document.getElementById('checkDoneSection').classList.add('hidden');
-  document.getElementById('previewArea').classList.add('hidden');
-  document.getElementById('studentCountSection').classList.add('hidden');
-  document.getElementById('cameraArea').classList.remove('hidden');
-  activeClass = null; capturedPhotoData = null;
-}
-function capturePhoto(){
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  if (!video || !video.videoWidth) { alert('Camera not ready'); return; }
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  const now = new Date();
-  const ds = formatDate(now), ts = formatTime(now);
-  const bH = 90;
-  ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, canvas.height - bH, canvas.width, bH);
-  ctx.fillStyle = '#10b981'; ctx.fillRect(0, canvas.height - bH, 6, bH);
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Segoe UI';
-  ctx.fillText(currentUser.name + '  |  ' + activeClass.className + '  |  ' + activeClass.subject, 15, canvas.height - bH + 26);
-  ctx.fillStyle = '#e2e8f0'; ctx.font = '15px Segoe UI';
-  ctx.fillText('Date: ' + ds + '   Time: ' + ts, 15, canvas.height - bH + 52);
-  ctx.fillStyle = '#a7f3d0'; ctx.font = '13px Segoe UI';
-  ctx.fillText('Career Point Hamirpur · CSE • Room ' + activeClass.room, 15, canvas.height - bH + 76);
-  capturedPhotoData = canvas.toDataURL('image/jpeg', 0.75);
-  document.getElementById('capturedPhoto').src = capturedPhotoData;
-  document.getElementById('cameraArea').classList.add('hidden');
-  document.getElementById('previewArea').classList.remove('hidden');
-  document.getElementById('captureBtn').classList.add('hidden');
-  document.getElementById('checkDoneSection').classList.remove('hidden');
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-}
-function retakePhoto(){
-  document.getElementById('checkDoneSection').classList.add('hidden');
-  document.getElementById('previewArea').classList.add('hidden');
-  document.getElementById('cameraArea').classList.remove('hidden');
-  document.getElementById('captureBtn').classList.remove('hidden');
-  capturedPhotoData = null;
-  resetCameraArea();
-  startCamera();
-}
-function donePhoto(){
-  document.getElementById('checkDoneSection').classList.add('hidden');
-  document.getElementById('studentCountSection').classList.remove('hidden');
-  document.getElementById('saveBtn').classList.remove('hidden');
-  setTimeout(() => document.getElementById('presentStudents').focus(), 100);
-}
-function updateAbsentInfo(){
-  const t = parseInt(document.getElementById('totalStudents').value) || 0;
-  const p = parseInt(document.getElementById('presentStudents').value) || 0;
-  document.getElementById('absentInfo').innerHTML = p > 0 ? '<span class="text-red-600 font-semibold">Absent: ' + (t - p) + '</span> • <span class="text-green-600 font-semibold">Present: ' + p + '</span>' : '';
-}
-function saveAttendance(){
-  if (!capturedPhotoData) { alert('Capture photo first'); return; }
-  const total = parseInt(document.getElementById('totalStudents').value) || 0;
-  const present = parseInt(document.getElementById('presentStudents').value);
-  if (isNaN(present) || present < 0) { alert('Enter valid present count'); return; }
-  if (present > total) { alert('Present cannot exceed ' + total); return; }
-  const now = new Date();
-  const key = currentUser.id + '_' + activeClass.day + '_' + activeClass.classKey;
-  attendance[today] = attendance[today] || {};
-  attendance[today][key] = {
-    id: currentUser.id + '_' + activeClass.day + '_' + activeClass.classKey + '_' + Date.now(),
-    teacherId: currentUser.id, teacherName: currentUser.name, className: activeClass.className,
-    subject: activeClass.subject, room: activeClass.room, timeSlot: activeClass.time,
-    photo: capturedPhotoData, date: today, dateFormatted: formatDate(now), time: formatTime(now),
-    timestamp: now.toISOString(), totalStudents: total, presentStudents: present,
-    absentStudents: total - present, status: 'present'
-  };
-  try { localStorage.setItem('attendance_v8', JSON.stringify(attendance)); } catch(e){}
-  closeSelfie();
-  renderTeacherClasses();
-  showToast('✓ Saved — ' + present + '/' + total);
-}
-function retakeAttendance(classKey, day){
-  const key = currentUser.id + '_' + day + '_' + classKey;
-  if (attendance[today] && attendance[today][key]) {
-    const c = attendance[today][key];
-    openSelfie(classKey, day, c.className, c.subject, c.room, c.timeSlot);
-    setTimeout(() => document.getElementById('presentStudents').value = c.presentStudents, 300);
-  }
-}
-function showToast(msg){
-  const t = document.createElement('div');
-  t.className = 'fixed top-40 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-2xl z-[70] font-semibold';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
-function openPhoto(id){
-  let found = null;
-  outer: for (const dk in attendance) { for (const k in attendance[dk]) { if (attendance[dk][k].id === id) { found = attendance[dk][k]; break outer; } } }
-  if (!found) return;
-  document.getElementById('viewPhoto').src = found.photo;
-  document.getElementById('viewPhotoInfo').innerHTML =
-    '<div class="font-bold text-slate-800">' + found.teacherName + ' • ' + found.className + '</div>' +
-    '<div>📚 ' + found.subject + ' • Room ' + found.room + '</div>' +
-    '<div>📅 ' + found.dateFormatted + ' • ⏰ ' + found.time + '</div>' +
-    '<div class="mt-2 p-2 bg-green-50 rounded"><span class="text-green-700 font-bold">👥 Present: ' + found.presentStudents + '/' + found.totalStudents + '</span><span class="text-red-600 ml-3">Absent: ' + found.absentStudents + '</span></div>';
-  document.getElementById('photoModal').classList.remove('hidden');
-}
-function closePhoto(){ document.getElementById('photoModal').classList.add('hidden'); }
 
-function showHodDashboard(){
-  document.getElementById('hodDashboard').classList.remove('hidden');
-  document.getElementById('hodNameHeader').textContent = currentUser.name + ' • Head of ' + currentUser.dept;
-  document.getElementById('hodDate').textContent = formatDate(new Date());
-  renderHodDashboard();
-}
-function renderHodDashboard(){
-  const deptTeachers = TEACHERS.filter(t => t.dept === currentUser.dept);
-  let full = 0, partial = 0, absent = 0;
-  deptTeachers.forEach(t => {
-    const s = getTeacherStatusToday(t.id);
-    if (s.status === 'full') full++; else if (s.status === 'partial') partial++; else if (s.status === 'absent') absent++;
-  });
-  document.getElementById('hodStatPresent').textContent = full;
-  document.getElementById('hodStatPartial').textContent = partial;
-  document.getElementById('hodStatAbsent').textContent = absent;
-  document.getElementById('hodStatTotal').textContent = deptTeachers.length;
-  document.getElementById('hodTeacherCount').textContent = deptTeachers.length + ' teachers';
-
-  const acts = [];
-  const tr = attendance[today] || {};
-  Object.keys(tr).forEach(k => {
-    const r = tr[k];
-    if (deptTeachers.find(t => t.id === r.teacherId)) acts.push({ time:r.time, ts:r.timestamp, teacher:r.teacherName, cls:r.className, pr:r.presentStudents, tt:r.totalStudents, photo:r.photo, id:r.id });
-  });
-  acts.sort((a,b) => new Date(b.ts) - new Date(a.ts));
-  const feed = document.getElementById('hodActivityFeed');
-  if (acts.length === 0) feed.innerHTML = '<div class="text-center py-6"><div class="text-3xl mb-1">📭</div><div class="text-slate-500 text-xs">No activity yet</div></div>';
-  else feed.innerHTML = acts.slice(0, 6).map(a => {
-    return '<div class="activity-item flex items-center gap-2 p-2 bg-slate-50 rounded-lg hover:bg-blue-50 transition cursor-pointer" onclick="openPhoto(\'' + a.id + '\')">' +
-      '<div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0">' + initials(a.teacher) + '</div>' +
-      '<div class="flex-1 min-w-0"><div class="text-xs font-semibold text-slate-800 truncate">' + a.teacher + ' → <span class="text-blue-600">' + a.cls + '</span></div><div class="text-[10px] text-slate-500">⏰ ' + a.time + ' • 👥 ' + a.pr + '/' + a.tt + '</div></div>' +
-      '<img src="' + a.photo + '" class="w-8 h-8 rounded object-cover border-2 border-green-500 flex-shrink-0"></div>';
-  }).join('');
-
-  const alerts = [];
-  deptTeachers.forEach(t => {
-    const s = getTeacherStatusToday(t.id);
-    if (s.status === 'absent') alerts.push({ t, type:'absent', s });
-    else if (s.status === 'partial') alerts.push({ t, type:'partial', s });
-  });
-  document.getElementById('hodAlertCount').textContent = alerts.length + ' alerts';
-  const af = document.getElementById('hodAlertFeed');
-  if (alerts.length === 0) af.innerHTML = '<div class="text-center py-6"><div class="text-3xl mb-1">🎉</div><div class="text-green-600 font-bold text-xs">All on track!</div></div>';
-  else af.innerHTML = alerts.map(a => {
-    const isA = a.type === 'absent';
-    return '<div class="activity-item flex items-center gap-2 p-2 ' + (isA ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300') + ' border-2 rounded-lg cursor-pointer hover:opacity-90" onclick="showHistory(\'' + a.t.id + '\')">' +
-      '<div class="text-xl flex-shrink-0">' + (isA ? '❌' : '⚠️') + '</div>' +
-      '<div class="flex-1 min-w-0"><div class="text-xs font-bold text-slate-800">' + a.t.name + '</div><div class="text-[10px] text-slate-600">' + (isA ? 'Nothing marked' : a.s.done + '/' + a.s.total + ' marked') + '</div></div>' +
-      '<button class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-semibold flex-shrink-0">View</button></div>';
-  }).join('');
-
-  document.getElementById('hodTeacherList').innerHTML = deptTeachers.map(t => {
-    const s = getTeacherStatusToday(t.id);
-    const sc = s.status === 'full' ? 'border-green-500 bg-green-50' : s.status === 'absent' ? 'border-red-400 bg-red-50' : s.status === 'partial' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white';
-    const sbMap = {
-      'full':'<span class="bg-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">FULL</span>',
-      'partial':'<span class="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">PARTIAL</span>',
-      'absent':'<span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">NOT MARKED</span>',
-      'no-classes':'<span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded font-bold">NO CLASS</span>'
-    };
-    const sb = sbMap[s.status];
-    let days = 0;
-    for (let i = 1; i <= 5; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      if (d.getDay() === 0) continue;
-      const dk = d.toISOString().split('T')[0];
-      const rs = attendance[dk] || {};
-      if (Object.keys(rs).some(k => k.indexOf(t.id + '_') === 0)) days++;
-    }
-    let stu = 0;
-    s.classes.forEach(c => {
-      const r = (attendance[today] || {})[t.id + '_' + c.day + '_' + c.start];
-      if (r) stu += r.presentStudents;
-    });
-    const rep = getTeacherTodayReport(t.id);
-    const thumbHTML = rep
-      ? '<img src="' + rep.photo + '" class="w-12 h-12 rounded-lg object-cover border-2 border-green-500 flex-shrink-0 cursor-pointer" onclick="event.stopPropagation(); openPhoto(\'' + rep.id + '\')">'
-      : '<div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">' + initials(t.name) + '</div>';
-    return '<div class="card teacher-card p-4 rounded-xl border-2 ' + sc + '" onclick="showHistory(\'' + t.id + '\')">' +
-      '<div class="flex items-start gap-3">' + thumbHTML +
-      '<div class="flex-1 min-w-0">' +
-      '<div class="flex items-start justify-between gap-2">' +
-      '<div class="min-w-0"><div class="font-bold text-blue-700 cursor-pointer truncate">' + t.name + '</div><div class="text-xs text-slate-500 truncate">' + t.subject + '</div></div>' +
-      sb + '</div>' +
-      '<div class="grid grid-cols-3 gap-2 mt-3 text-center">' +
-      '<div class="bg-white rounded-lg py-1.5 border border-slate-200"><div class="text-sm font-bold text-blue-700">' + s.done + '/' + s.total + '</div><div class="text-[9px] text-slate-500">Classes</div></div>' +
-      '<div class="bg-white rounded-lg py-1.5 border border-slate-200"><div class="text-sm font-bold text-purple-700">' + stu + '</div><div class="text-[9px] text-slate-500">Students</div></div>' +
-      '<div class="bg-white rounded-lg py-1.5 border border-slate-200"><div class="text-sm font-bold text-green-700">' + days + 'd</div><div class="text-[9px] text-slate-500">History</div></div>' +
-      '</div>' +
-      '<button class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-semibold">View 5-Day History →</button>' +
-      '</div></div></div>';
-  }).join('');
-}
-
-function showHistory(teacherId){
-  const teacher = TEACHERS.find(t => t.id === teacherId);
-  if (!teacher) return;
-  document.getElementById('teacherAvatar').textContent = initials(teacher.name);
-  document.getElementById('historyTitle').textContent = teacher.name;
-  document.getElementById('historySubtitle').textContent = teacher.dept + ' • ' + teacher.subject;
-
-  const days = [];
-  for (let i = 1; i <= 5; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    if (d.getDay() === 0) continue;
-    days.push({ date: d, dk: d.toISOString().split('T')[0] });
-  }
-
-  let tE = 0, tA = 0, tSP = 0, tSE = 0;
-  const dailyHTML = days.map(dayObj => {
-    const date = dayObj.date, dk = dayObj.dk;
-    const dow = date.getDay(), dn = getDayName(dow), ds = formatDate(date);
-    let dClasses = TIMETABLE.filter(t => t.teacherId === teacherId && t.day === dow);
-    if (dClasses.length === 0) dClasses = TIMETABLE.filter(t => t.teacherId === teacherId && t.day === 1);
-    dClasses.sort((a,b) => a.start.localeCompare(b.start));
-    const recs = attendance[dk] || {};
-    const marked = dClasses.filter(c => recs[teacherId + '_' + c.day + '_' + c.start]);
-    tE += dClasses.length; tA += marked.length;
-    let dp = 0, dt = 0;
-    const ch = dClasses.map(c => {
-      const key = teacherId + '_' + c.day + '_' + c.start;
-      const r = recs[key];
-      const done = !!r;
-      const str = CLASS_STRENGTH[c.class] || 50;
-      if (done) { dp += r.presentStudents; dt += r.totalStudents; tSP += r.presentStudents; tSE += r.totalStudents; }
-      const rightSide = done
-        ? '<div class="text-center flex-shrink-0"><div class="text-base font-bold text-green-700">' + r.presentStudents + '<span class="text-[10px] text-slate-400">/' + r.totalStudents + '</span></div><div class="text-[9px] text-slate-500">students</div></div>' +
-          '<div class="text-[11px] text-slate-500 text-right flex-shrink-0"><div>⏰ ' + r.time + '</div><div class="text-green-600 font-semibold">✓ Marked</div></div>' +
-          '<img src="' + r.photo + '" onclick="event.stopPropagation(); openPhoto(\'' + r.id + '\')" class="w-11 h-11 rounded object-cover cursor-pointer border-2 border-green-500 flex-shrink-0">'
-        : '<div class="text-center flex-shrink-0"><div class="text-base font-bold text-red-600">0<span class="text-[10px] text-slate-400">/' + str + '</span></div><div class="text-[9px] text-slate-500">students</div></div>' +
-          '<div class="text-[11px] text-red-600 font-bold flex-shrink-0">Not Marked</div>';
-      return '<div class="flex items-center gap-3 p-3 rounded-lg ' + (done ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-400') + '">' +
-        '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><span class="font-bold text-slate-800 text-sm">' + c.class + '</span><span class="text-[11px] text-slate-500">' + c.start + '–' + c.end + ' • Room ' + c.room + '</span></div><div class="text-xs text-slate-600">' + c.subject + '</div></div>' +
-        rightSide + '</div>';
-    }).join('');
-    const pct = dClasses.length > 0 ? Math.round((marked.length / dClasses.length) * 100) : 0;
-    const col = pct === 100 ? 'border-green-500' : pct > 0 ? 'border-amber-500' : 'border-red-500';
-    const pctBg = pct === 100 ? 'bg-green-100 text-green-700' : pct > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
-    return '<div class="bg-white rounded-xl border-2 ' + col + ' overflow-hidden">' +
-      '<div class="bg-slate-50 px-4 py-2 flex justify-between items-center flex-wrap gap-2">' +
-      '<div><div class="font-bold text-slate-800 text-sm">' + dn + ' — ' + ds + '</div><div class="text-[11px] text-slate-500">' + marked.length + '/' + dClasses.length + ' marked</div></div>' +
-      '<div class="flex items-center gap-2 flex-wrap">' + (dt > 0 ? '<div class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold">👥 ' + dp + '/' + dt + '</div>' : '') +
-      '<div class="text-[11px] font-bold px-2.5 py-1 rounded-lg ' + pctBg + '">' + pct + '%</div></div></div>' +
-      '<div class="p-3 space-y-2">' + ch + '</div></div>';
-  }).join('');
-
-  const oP = tE > 0 ? Math.round((tA / tE) * 100) : 0;
-  const sP = tSE > 0 ? Math.round((tSP / tSE) * 100) : 0;
-  document.getElementById('historySummary').innerHTML =
-    '<div class="bg-blue-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + tA + '/' + tE + '</div><div class="text-xs">Classes Marked</div></div>' +
-    '<div class="bg-green-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + oP + '%</div><div class="text-xs">Rate</div></div>' +
-    '<div class="bg-purple-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + tSP + '</div><div class="text-xs">Students</div></div>' +
-    '<div class="bg-amber-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + sP + '%</div><div class="text-xs">Student %</div></div>';
-  document.getElementById('historyContent').innerHTML = dailyHTML;
-  document.getElementById('historyModal').classList.remove('hidden');
-}
-function closeHistory(){ document.getElementById('historyModal').classList.add('hidden'); }
-
-function showDeanDashboard(){
-  document.getElementById('deanDashboard').classList.remove('hidden');
-  document.getElementById('deanNameHeader').textContent = currentUser.name + ' • Dean';
-  document.getElementById('deanDate').textContent = formatDate(new Date());
-  renderDeanDashboard();
-}
-function renderDeanDashboard(){
-  let full = 0, partial = 0, absent = 0;
-  document.getElementById('deanTeacherList').innerHTML = TEACHERS.map(t => {
-    const s = getTeacherStatusToday(t.id);
-    if (s.status === 'full') full++; else if (s.status === 'partial') partial++; else if (s.status === 'absent') absent++;
-    const col = s.status === 'full' ? 'border-green-500 bg-green-50' : s.status === 'absent' ? 'border-red-400 bg-red-50' : s.status === 'partial' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white';
-    const icon = s.status === 'full' ? '✅' : s.status === 'absent' ? '❌' : s.status === 'partial' ? '⚠️' : '—';
-    let tp = 0, ts = 0;
-    s.classes.forEach(c => {
-      const r = (attendance[today] || {})[t.id + '_' + c.day + '_' + c.start];
-      const str = CLASS_STRENGTH[c.class] || 50;
-      ts += str;
-      if (r) tp += r.presentStudents;
-    });
-    return '<div class="card p-3 rounded-xl border-2 ' + col + '"><div class="flex justify-between items-center"><div><div class="font-bold text-slate-800">' + t.name + '</div><div class="text-xs text-slate-500">' + t.dept + ' • ' + t.subject + '</div><div class="text-xs mt-1 font-semibold text-blue-600">👥 ' + tp + '/' + ts + '</div></div><div class="text-right"><div class="text-lg">' + icon + '</div><div class="text-xs text-slate-600">' + s.done + '/' + s.total + '</div></div></div></div>';
-  }).join('');
-  document.getElementById('deanStatPresent').textContent = full;
-  document.getElementById('deanStatPartial').textContent = partial;
-  document.getElementById('deanStatAbsent').textContent = absent;
-  document.getElementById('deanStatTotal').textContent = TEACHERS.length;
-}
-function downloadDeanReport(){
-  let csv = 'Teacher,Department,Subject,Status,Classes Marked,Total Classes\n';
-  TEACHERS.forEach(t => {
-    const s = getTeacherStatusToday(t.id);
-    csv += '"' + t.name + '","' + t.dept + '","' + t.subject + '","' + s.status.toUpperCase() + '",' + s.done + ',' + s.total + '\n';
-  });
-  csv += '\n\n=== DETAILED LOG ===\nTeacher,Class,Subject,Room,Date,Time,Present,Total,Absent\n';
-  for (const dk in attendance) {
-    for (const k in attendance[dk]) {
-      const r = attendance[dk][k];
-      csv += '"' + r.teacherName + '","' + r.className + '","' + r.subject + '","' + r.room + '","' + r.dateFormatted + '","' + r.time + '",' + r.presentStudents + ',' + r.totalStudents + ',' + r.absentStudents + '\n';
-    }
-  }
-  const blob = new Blob([csv], { type:'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'dean_report_' + today + '.csv';
-  a.click();
-}
-function openTimetable(){
-  if (!currentUser || !currentUser.id) return;
-  window.open(currentUser.id + '.html', '_blank');
-}
-
-setInterval(() => {
-  if (!currentUser) return;
-  if (!document.getElementById('welcomeScreen').classList.contains('hidden')) renderWelcomeData();
-  else if (currentUser.role === 'teacher' && !document.getElementById('teacherDashboard').classList.contains('hidden')) renderTeacherClasses();
-  else if (currentUser.role === 'hod' && !document.getElementById('hodDashboard').classList.contains('hidden')) renderHodDashboard();
-  else if (currentUser.role === 'dean' && !document.getElementById('deanDashboard').classList.contains('hidden')) renderDeanDashboard();
-}, 10000);
-
-window.addEventListener('DOMContentLoaded', function(){
-  renderTeacherList();
-  const ps = document.getElementById('presentStudents');
-  if (ps) ps.addEventListener('input', updateAbsentInfo);
-  const tsField = document.getElementById('totalStudents');
-  if (tsField) tsField.addEventListener('input', updateAbsentInfo);
-
-  const s = loadSession();
-  if (!s) { window.location.href = 'start.html'; return; }
-
-  let u = null;
-  if (s.role === 'teacher') u = TEACHERS.find(t => t.id === s.id);
-  else if (s.role === 'hod') u = HODS.find(h => h.id === s.id);
-  else if (s.role === 'dean') u = DEANS.find(d => d.id === s.id);
-
-  if (!u) { window.location.href = 'start.html'; return; }
-
-  currentUser = Object.assign({ role: s.role }, u);
-  document.getElementById('mainApp').classList.remove('hidden');
-  const lbl = { 'teacher':'👨‍🏫', 'hod':'👔', 'dean':'🎯' }[s.role];
-  document.getElementById('loggedInUser').textContent = lbl + ' ' + u.name;
-  document.getElementById('welcomeName').textContent = u.name;
-  backToHome();
+document.getElementById('pwSubmit').addEventListener('click', submitPw);
+document.getElementById('pwBack').addEventListener('click', closePw);
+document.getElementById('pwEye').addEventListener('click', function(){
+  const i = document.getElementById('pwInput');
+  const hidden = i.type === 'password';
+  i.type = hidden ? 'text' : 'password';
+  this.textContent = hidden ? '🙈' : '👁️';
+  i.focus();
 });
+document.getElementById('pwInput').addEventListener('keypress', function(e){
+  if(e.key === 'Enter') submitPw();
+});
+
+buildGrid();
+
+setTimeout(()=>{
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(()=>{
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'block';
+  }, 700);
+}, 3000);
 </script>
 <!-- ================= THEME TOGGLE ================= -->
 <button id="themeToggle" title="Toggle Theme" 
