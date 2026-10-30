@@ -1,0 +1,356 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ms. Monika - Timetable - EduTrack AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; }
+  .card { transition: all 0.2s ease; }
+  .class-row { transition: all 0.2s ease; }
+  .class-row:hover { transform: translateX(4px); }
+  .today-highlight { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); }
+</style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+
+<!-- HEADER -->
+<div class="bg-white shadow-md sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <div class="text-2xl">🎓</div>
+      <div>
+        <div class="font-bold text-slate-800">EduTrack AI — Timetable</div>
+        <div class="text-xs text-slate-500">Career Point Hamirpur</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-semibold" id="todayDate"></span>
+      <a href="home.html" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">Close</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="max-w-6xl mx-auto p-4">
+
+  <!-- Teacher Info -->
+  <div class="bg-white rounded-2xl shadow-lg p-5 mb-4 flex items-center gap-4 flex-wrap">
+    <div id="teacherAvatar" class="bg-gradient-to-br from-pink-500 to-purple-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold">MK</div>
+    <div class="flex-1 min-w-[200px]">
+      <h1 id="teacherName" class="text-2xl font-bold text-slate-800">Ms. Monika</h1>
+      <p id="teacherInfo" class="text-sm text-slate-500">Computer Applications • Computer Science • monika@cp.com</p>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <div class="bg-blue-50 rounded-lg px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-blue-600" id="totalClasses">0</div>
+        <div class="text-xs text-slate-500">Total/Week</div>
+      </div>
+      <div class="bg-green-50 rounded-lg px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-green-600" id="todayClasses">0</div>
+        <div class="text-xs text-slate-500">Today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TODAY'S SCHEDULE  (auto-updates daily)
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg p-5 mb-4 text-white">
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="bg-white/20 rounded-xl w-12 h-12 flex items-center justify-center text-2xl">📅</div>
+        <div>
+          <div class="font-bold text-lg">Today's Schedule</div>
+          <div class="text-xs opacity-90" id="todayDayLabel">—</div>
+        </div>
+      </div>
+      <div class="bg-white text-blue-700 px-4 py-1.5 rounded-lg text-sm font-bold">
+        <span id="todayClassCount">0</span> Classes Today
+      </div>
+    </div>
+
+    <div id="todayScheduleList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <!-- JS will inject today's classes here -->
+    </div>
+  </div>
+
+  <!-- Banner -->
+  <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4 mb-4">
+    <div class="font-bold text-purple-800 mb-1">📅 Weekly Timetable</div>
+    <div class="text-sm text-purple-700">Ms. Monika ke saare classes — Monday se Saturday tak. Aaj ka din highlight kiya gaya hai.</div>
+  </div>
+
+  <!-- Grid -->
+  <div id="timetableGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//                        TEACHER INFO
+// ═══════════════════════════════════════════════════════════════
+const TEACHER = {
+  id: 'monika',
+  name: 'Ms. Monika',
+  email: 'monika@cp.com',
+  subject: 'Computer Applications',
+  dept: 'Computer Science'
+};
+
+// ═══════════════════════════════════════════════════════════════
+//                    MS. MONIKA TIMETABLE DATA
+//         day: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+// ═══════════════════════════════════════════════════════════════
+const TIMETABLE = [
+
+  // ─── MONDAY ───
+  { day:1, period:'I', start:'09:15 AM', end:'10:05 AM', room:'303', classes:[
+    { program:'B.Sc CS 1st',              course:'CA601', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA121', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA101', sem:'1st' }
+  ]},
+  { day:1, period:'II', start:'10:05 AM', end:'10:55 AM', room:'303', classes:[
+    { program:'BCA + MCA 1st', course:'CA151', sem:'1st' },
+    { program:'BCA 1st A',      course:'CA151', sem:'1st' }
+  ]},
+  { day:1, period:'III', start:'10:55 AM', end:'11:45 AM', room:'610A', classes:[
+    { program:'B.Sc CS 1st',              course:'CA603', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA171', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA151', sem:'1st' }
+  ]},
+  { day:1, period:'IV', start:'11:45 AM', end:'12:35 PM', room:'709', classes:[
+    { program:'BCA + MCA 1st', course:'CA151', sem:'1st' },
+    { program:'BCA 1st A',      course:'CA151', sem:'1st' }
+  ]},
+
+  // ─── TUESDAY ───
+  { day:2, period:'I', start:'09:15 AM', end:'10:05 AM', room:'303', classes:[
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS', course:'CA151', sem:'1st' }
+  ]},
+  { day:2, period:'II', start:'10:05 AM', end:'10:55 AM', room:'612B', classes:[
+    { program:'BCA + MCA 1st', course:'CA151', sem:'1st' },
+    { program:'BCA 1st A',      course:'CA151', sem:'1st' }
+  ]},
+  { day:2, period:'III', start:'10:55 AM', end:'11:45 AM', room:'609', classes:[
+    { program:'CSE 1st (A)', course:'CS108', sem:'1st' }
+  ]},
+  { day:2, period:'IV', start:'11:45 AM', end:'12:35 PM', room:'612B', classes:[
+    { program:'B.Sc CS 1st',              course:'CA601', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA121', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA101', sem:'1st' }
+  ]},
+
+  // ─── WEDNESDAY ───
+  { day:3, period:'I', start:'09:15 AM', end:'10:05 AM', room:'605', classes:[
+    { program:'CSE 1st (B)', course:'CS108', sem:'1st' }
+  ]},
+  { day:3, period:'III', start:'10:55 AM', end:'11:45 AM', room:'612B', classes:[
+    { program:'CSE 1st (B)', course:'CS108', sem:'1st' }
+  ]},
+  { day:3, period:'IV', start:'11:45 AM', end:'12:35 PM', room:'610A', classes:[
+    { program:'CSE 1st (A)', course:'CS108', sem:'1st' }
+  ]},
+  { day:3, period:'VI', start:'01:25 PM', end:'02:15 PM', room:'303', classes:[
+    { program:'B.Sc CS 1st',              course:'CA601', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA101', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA101', sem:'1st' }
+  ]},
+  { day:3, period:'VII', start:'02:15 PM', end:'03:05 PM', room:'608', classes:[
+    { program:'B.Sc CS 1st',              course:'CA601', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA101', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA101', sem:'1st' }
+  ]},
+
+  // ─── THURSDAY ───
+  { day:4, period:'II', start:'10:05 AM', end:'10:55 AM', room:'611B', classes:[
+    { program:'B.Sc CS 1st',              course:'CA603', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA151', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA151', sem:'1st' }
+  ]},
+  { day:4, period:'IV', start:'11:45 AM', end:'12:35 PM', room:'303', classes:[
+    { program:'BCA + MCA 1st', course:'CA151', sem:'1st' },
+    { program:'BCA 1st A',      course:'CA151', sem:'1st' }
+  ]},
+  { day:4, period:'VII', start:'02:15 PM', end:'03:05 PM', room:'609', classes:[
+    { program:'CSE 1st (B)', course:'CS108', sem:'1st' }
+  ]},
+
+  // ─── FRIDAY ───
+  { day:5, period:'I', start:'09:15 AM', end:'10:05 AM', room:'612B', classes:[
+    { program:'B.Sc CS 1st',              course:'CA603', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA151', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA151', sem:'1st' }
+  ]},
+  { day:5, period:'II', start:'10:05 AM', end:'10:55 AM', room:'612B', classes:[
+    { program:'CSE 1st (A)', course:'CS108', sem:'1st' }
+  ]},
+  { day:5, period:'IV', start:'11:45 AM', end:'12:35 PM', room:'303', classes:[
+    { program:'B.Sc CS 1st',              course:'CA603', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA151', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA151', sem:'1st' }
+  ]},
+  { day:5, period:'VI', start:'01:25 PM', end:'02:15 PM', room:'611A', classes:[
+    { program:'BCA 1st A', course:'CA151', sem:'1st' }
+  ]},
+  { day:5, period:'VII', start:'02:15 PM', end:'03:05 PM', room:'605', classes:[
+    { program:'CSE 1st (A)', course:'CS108', sem:'1st' }
+  ]},
+
+  // ─── SATURDAY ───
+  { day:6, period:'I', start:'09:15 AM', end:'10:05 AM', room:'609', classes:[
+    { program:'BCA + MCA 1st', course:'CA151', sem:'1st' },
+    { program:'BCA 1st A',      course:'CA151', sem:'1st' }
+  ]},
+  { day:6, period:'III', start:'10:55 AM', end:'11:45 AM', room:'605', classes:[
+    { program:'CSE 1st (A)', course:'CS108', sem:'1st' }
+  ]},
+  { day:6, period:'IV', start:'11:45 AM', end:'12:35 PM', room:'611A', classes:[
+    { program:'B.Sc CS 1st',              course:'CA603', sem:'1st' },
+    { program:'B.Sc IT 1st',              course:'CA151', sem:'1st' },
+    { program:'BCA 1st B/B.Sc IT/B.Sc CS',course:'CA151', sem:'1st' }
+  ]},
+  { day:6, period:'VI', start:'01:25 PM', end:'02:15 PM', room:'609', classes:[
+    { program:'CSE 1st (B)', course:'CS108', sem:'1st' }
+  ]},
+  { day:6, period:'VII', start:'02:15 PM', end:'03:05 PM', room:'605', classes:[
+    { program:'CSE 1st (B)', course:'CS108', sem:'1st' }
+  ]}
+
+];
+
+// ==================== HELPERS ====================
+function formatDate(d) {
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ==================== INIT ====================
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('todayDate').textContent = formatDate(now);
+
+  document.getElementById('totalClasses').textContent = TIMETABLE.length;
+
+  const todayDay = now.getDay(); // 0=Sun ... 6=Sat
+  const todayClasses = TIMETABLE
+    .filter(c => c.day === todayDay)
+    .sort((a, b) => a.period.localeCompare(b.period));
+
+  document.getElementById('todayClasses').textContent = todayClasses.length;
+  document.getElementById('todayClassCount').textContent = todayClasses.length;
+
+  const dayNames = { 0:'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday' };
+  document.getElementById('todayDayLabel').textContent = dayNames[todayDay] + ' • ' + formatDate(now);
+
+  // ═══════════════ TODAY'S SCHEDULE LIST ═══════════════
+  const todayList = document.getElementById('todayScheduleList');
+  if (todayClasses.length === 0) {
+    todayList.innerHTML = `
+      <div class="sm:col-span-2 lg:col-span-3 bg-white/15 rounded-xl p-5 text-center">
+        <div class="text-3xl mb-1">🎉</div>
+        <div class="font-semibold">No classes today!</div>
+        <div class="text-xs opacity-80 mt-1">Enjoy your day off.</div>
+      </div>
+    `;
+  } else {
+    todayList.innerHTML = todayClasses.map((c, i) => {
+      const isNow = isClassNow(c.start, c.end);
+      return `
+        <div class="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/20 ${isNow ? 'ring-2 ring-yellow-300' : ''}">
+          <div class="flex justify-between items-start mb-2">
+            <span class="bg-white text-blue-700 text-[11px] px-2 py-0.5 rounded font-bold">Period ${c.period}</span>
+            <span class="text-[10px] bg-black/20 px-2 py-0.5 rounded">Room ${c.room}</span>
+          </div>
+          <div class="text-xs mb-2 opacity-90">⏰ ${c.start} – ${c.end}
+            ${isNow ? '<span class="ml-1 bg-yellow-300 text-yellow-900 text-[9px] font-bold px-1.5 py-0.5 rounded">NOW</span>' : ''}
+          </div>
+          <div class="space-y-1">
+            ${c.classes.map(cl => `
+              <div class="text-[11px] leading-tight">
+                <span class="font-semibold">${cl.program}</span>
+                <span class="opacity-80"> • ${cl.course}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ═══════════════ WEEKLY GRID ═══════════════
+  const dayColors = {
+    1: 'from-blue-500 to-blue-600',
+    2: 'from-green-500 to-green-600',
+    3: 'from-purple-500 to-purple-600',
+    4: 'from-orange-500 to-orange-600',
+    5: 'from-pink-500 to-pink-600',
+    6: 'from-slate-500 to-slate-700'
+  };
+
+  let gridHTML = '';
+  for (let day = 1; day <= 6; day++) {
+    const dayClasses = TIMETABLE
+      .filter(c => c.day === day)
+      .sort((a, b) => a.period.localeCompare(b.period));
+    const isToday = day === todayDay;
+
+    gridHTML += `
+      <div class="card bg-white border-2 ${isToday ? 'border-blue-500 today-highlight' : 'border-slate-200'} rounded-2xl overflow-hidden">
+        <div class="bg-gradient-to-r ${dayColors[day]} text-white px-4 py-3 flex justify-between items-center">
+          <div>
+            <div class="font-bold">${dayNames[day]}</div>
+            <div class="text-xs opacity-90">${dayClasses.length} ${dayClasses.length === 1 ? 'period' : 'periods'}</div>
+          </div>
+          ${isToday ? '<span class="bg-white text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full">TODAY</span>' : ''}
+        </div>
+        <div class="p-3 space-y-2">
+          ${dayClasses.length === 0 ? `
+            <div class="text-center py-6 text-slate-400 text-xs">No classes</div>
+          ` : dayClasses.map(c => `
+            <div class="class-row bg-slate-50 rounded-lg p-3 border-l-4 border-blue-500">
+              <div class="flex justify-between items-start gap-2 mb-1">
+                <span class="bg-blue-600 text-white text-[11px] px-2 py-0.5 rounded font-bold">Period ${c.period}</span>
+                <span class="text-[10px] text-slate-500 font-semibold">Room ${c.room}</span>
+              </div>
+              <div class="text-[11px] text-slate-600 mb-2">⏰ ${c.start} – ${c.end}</div>
+              <div class="space-y-1">
+                ${c.classes.map(cl => `
+                  <div class="text-[11px] leading-tight">
+                    <span class="font-semibold text-slate-800">${cl.program}</span>
+                    <span class="text-slate-500"> • 📘 ${cl.course} · Sem ${cl.sem}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('timetableGrid').innerHTML = gridHTML;
+});
+
+// ==================== "IS CLASS NOW?" HELPER ====================
+function isClassNow(startStr, endStr) {
+  try {
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    const s = parseTime(startStr);
+    const e = parseTime(endStr);
+    return cur >= s && cur <= e;
+  } catch { return false; }
+}
+
+function parseTime(str) {
+  // "09:15 AM" → minutes since midnight
+  const [time, ampm] = str.split(' ');
+  let [h, m] = time.split(':').map(Number);
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+}
+</script>
+</body>
+</html>
