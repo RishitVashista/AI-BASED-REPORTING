@@ -22,7 +22,7 @@
     .dropdown-menu { animation: fadeIn 0.15s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
     .hero-gradient { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%); }
-    .stat-card { transition: all 0.3s ease; }
+    .t-card { transition: all 0.3s ease; }
     .stat-card:hover { transform: scale(1.03); }
     .pulse-dot { animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -30,6 +30,249 @@
     @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     .teacher-card { cursor: pointer; }
     .teacher-card:hover { border-color: #3b82f6 !important; }
+    /* ==============================
+   EDUTRACK AI CHATBOT CSS
+================================ */
+
+/* Floating Chatbot Button */
+#eduChatBtn {
+  position: fixed;
+  bottom: 95px;
+  right: 22px;
+  width: 62px;
+  height: 62px;
+  border: 3px solid rgba(255,255,255,.8);
+  border-radius: 50%;
+  background: linear-gradient(135deg,#3b82f6,#7c3aed);
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 10010;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 28px rgba(59,130,246,.45);
+  transition: all .3s ease;
+  animation: eduBotFloat 3s ease-in-out infinite;
+}
+
+#eduChatBtn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 12px 35px rgba(124,58,237,.55);
+}
+
+@keyframes eduBotFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+/* Chatbot Main Window */
+#eduChatBox {
+  display: none;
+  position: fixed;
+  bottom: 170px;
+  right: 22px;
+  width: 370px;
+  height: 500px;
+  max-height: 75vh;
+  background: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  z-index: 10011;
+  box-shadow: 0 20px 65px rgba(15,23,42,.25);
+  border: 1px solid #e2e8f0;
+  animation: eduChatOpen .3s ease;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+@keyframes eduChatOpen {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Chatbot Header */
+#eduChatHeader {
+  background: linear-gradient(135deg,#2563eb,#7c3aed);
+  color: white;
+  padding: 17px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  box-shadow: 0 4px 15px rgba(37,99,235,.2);
+}
+
+/* Chat Messages Area */
+#eduChatMessages {
+  height: calc(100% - 145px);
+  overflow-y: auto;
+  padding: 16px;
+  background: linear-gradient(180deg,#f8faff,#eef2ff);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Common Message */
+.edu-msg {
+  max-width: 85%;
+  padding: 12px 15px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  animation: eduMessageIn .25s ease;
+}
+
+@keyframes eduMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bot Message */
+.edu-bot {
+  align-self: flex-start;
+  background: white;
+  color: #1e293b;
+  border: 1px solid #dbeafe;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.04);
+}
+
+/* User Message */
+.edu-user {
+  align-self: flex-end;
+  background: linear-gradient(135deg,#2563eb,#6366f1);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 12px rgba(37,99,235,.2);
+}
+
+/* Input Section */
+#eduChatInputArea {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 9px;
+  padding: 12px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Input Field */
+#eduChatInput {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  font-size: 13px;
+  background: #f8fafc;
+  color: #1e293b;
+  transition: border .2s;
+}
+
+#eduChatInput:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* Send Button */
+#eduChatSend {
+  width: 44px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg,#2563eb,#7c3aed);
+  color: white;
+  font-size: 19px;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+#eduChatSend:hover {
+  transform: scale(1.08);
+  box-shadow: 0 5px 15px rgba(99,102,241,.35);
+}
+
+/* Scrollbar */
+#eduChatMessages::-webkit-scrollbar {
+  width: 5px;
+}
+
+#eduChatMessages::-webkit-scrollbar-thumb {
+  background: #a5b4fc;
+  border-radius: 10px;
+}
+
+/* Dark Mode Support */
+html[data-theme="dark"] #eduChatBox {
+  background: #132a54;
+  border-color: rgba(255,255,255,.15);
+}
+
+html[data-theme="dark"] #eduChatMessages {
+  background: #0f1f3d;
+}
+
+html[data-theme="dark"] .edu-bot {
+  background: #1e3a66;
+  color: #eaf1ff;
+  border-color: rgba(255,255,255,.12);
+}
+
+html[data-theme="dark"] #eduChatInputArea {
+  background: #132a54;
+  border-color: rgba(255,255,255,.12);
+}
+
+html[data-theme="dark"] #eduChatInput {
+  background: #081227;
+  color: white;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] #eduChatInput::placeholder {
+  color: #94a3b8;
+}
+
+/* Mobile Responsive */
+@media(max-width:480px) {
+  #eduChatBox {
+    width: calc(100% - 24px);
+    right: 12px;
+    bottom: 155px;
+    height: 450px;
+    max-height: 70vh;
+  }
+
+  #eduChatBtn {
+    width: 55px;
+    height: 55px;
+    right: 15px;
+    bottom: 85px;
+    font-size: 24px;
+  }
+
+  #eduChatMessages {
+    padding: 12px;
+  }
+}
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
@@ -2259,6 +2502,30 @@ window.addEventListener('DOMContentLoaded', function(){
   window.__notices = { getNotices, saveNotices, getSeen, hasSeen, getShown, hasShown, getUnseenCount, updateBadge };
 })();
 </script>
+<!-- ===== EDUTRACK AI CHATBOT ===== -->
+
+<button id="eduChatBtn">🤖</button>
+
+<div id="eduChatBox">
+
+  <div id="eduChatHeader">
+    <span>🤖 EduTrack AI Assistant</span>
+    <button onclick="eduChatToggle()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
+  </div>
+
+  <div id="eduChatMessages">
+    <div class="edu-msg edu-bot">
+      Hello! 👋 Welcome to EduTrack AI.<br>
+      Ask me about classes, attendance and reports.
+    </div>
+  </div>
+
+  <div id="eduChatInputArea">
+    <input id="eduChatInput" placeholder="Ask something..." />
+    <button id="eduChatSend">➤</button>
+  </div>
+
+</div>
 <!-- ================= FACULTY CORNER: TEACHER THOUGHTS ================= -->
 <script>
 (function(){
@@ -2435,6 +2702,98 @@ window.addEventListener('DOMContentLoaded', function(){
     setInterval(() => { if (!document.hidden) renderThoughts(); }, 30000);
   });
 })();
+</script>
+<script>
+function eduChatToggle() {
+  const box = document.getElementById("eduChatBox");
+  box.style.display =
+    box.style.display === "block" ? "none" : "block";
+}
+async function eduChatReply(message) {
+    const user = JSON.parse(
+        localStorage.getItem("edutrack_session") || "null"
+    );
+
+    if (!user) {
+        return "Please login first to use EduTrack AI.";
+    }
+
+    try {
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: message,
+                userId: user.id,
+                userName: user.name,
+                role: user.role
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Chat request failed");
+        }
+
+        return data.reply;
+
+    } catch (error) {
+        console.error("EduTrack AI Error:", error);
+        return "Sorry! AI Assistant is temporarily unavailable.";
+    }
+}
+document.getElementById("eduChatBtn").onclick = eduChatToggle;
+
+async function eduChatSend() {
+
+    const input = document.getElementById("eduChatInput");
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    const messages = document.getElementById("eduChatMessages");
+
+    // User message
+    const userDiv = document.createElement("div");
+    userDiv.className = "edu-msg edu-user";
+    userDiv.textContent = message;
+    messages.appendChild(userDiv);
+
+    // Loading message
+    const botDiv = document.createElement("div");
+    botDiv.className = "edu-msg edu-bot";
+    botDiv.textContent = "EduTrack AI is thinking...";
+    messages.appendChild(botDiv);
+
+    input.value = "";
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+        // Get AI response
+        const reply = await eduChatReply(message);
+        botDiv.textContent = reply;
+
+    } catch (error) {
+        console.error(error);
+        botDiv.textContent = "Sorry! Something went wrong. Please try again.";
+    }
+
+    messages.scrollTop = messages.scrollHeight;
+}
+
+
+
+
+
+
+document.getElementById("eduChatSend").onclick = eduChatSend;
+
+document.getElementById("eduChatInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") eduChatSend();
+});
 </script>
 </body>
 </html>
