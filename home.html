@@ -1,6 +1,10 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+ <!-- AI Camera: TensorFlow.js + COCO-SSD (LOCAL — no CDN) -->
+ 
+<script src="lib/tf.min.js"></script>
+<script src="lib/coco-ssd.min.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduTrack AI - Career Point Hamirpur (CSE)</title>
@@ -33,7 +37,7 @@
 <!-- MAIN APP -->
 <div id="mainApp">
 
-<!-- NAV BAR (fixed to avoid theme/bell overlap) -->
+<!-- NAV BAR -->
 <div class="bg-white shadow-lg sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 py-3 pr-[110px] md:pr-[150px]">
     <div class="flex justify-between items-center flex-wrap gap-3 mb-4">
@@ -273,12 +277,89 @@
         <div><label class="text-xs text-slate-600 font-semibold">Present</label><input id="presentStudents" type="number" min="0" placeholder="Enter count" class="w-full mt-1 p-2 border-2 border-blue-400 rounded-lg font-bold text-blue-700 focus:border-blue-600 outline-none"></div>
       </div>
       <div id="absentInfo" class="mt-2 text-xs text-slate-500"></div>
+      <!-- AI Camera Detection Result -->
+      <div id="aiDetectionBox" class="mt-3 p-3 bg-blue-50 border-2 border-blue-300 rounded-lg">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <div class="text-xs font-semibold text-slate-600">🤖 AI Camera Detected</div>
+            <div class="text-2xl font-bold text-blue-700" id="aiDetectedCount">—</div>
+            <div class="text-[10px] text-slate-500" id="aiStatus">Analyze hone ka wait karo...</div>
+          </div>
+          <button onclick="recheckAI()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-bold">🔄 Re-check</button>
+        </div>
+        <div id="aiAlert" class="hidden mt-2 p-2 rounded-lg text-xs font-bold"></div>
+        <button onclick="openStudentMarking()" class="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white text-xs py-2 rounded-lg font-bold">👥 Mark Individual Students (Roll-wise)</button>
+      </div>
     </div>
     <div class="flex gap-2">
       <button onclick="closeSelfie()" class="flex-1 bg-slate-300 hover:bg-slate-400 text-slate-800 py-3 rounded-lg font-semibold">Cancel</button>
       <button id="captureBtn" onclick="capturePhoto()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold">📸 Capture Photo</button>
       <button id="saveBtn" onclick="saveAttendance()" class="hidden flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold">✓ Save Attendance</button>
     </div>
+  </div>
+</div>
+<!-- ============ STUDENT MARKING MODAL ============ -->
+<div id="studentMarkingModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl p-5 w-full max-w-4xl my-4">
+    <div class="flex justify-between items-center mb-3">
+      <div>
+        <h3 class="text-lg font-bold text-slate-800" id="markingTitle">Mark Individual Students</h3>
+        <p class="text-xs text-slate-500" id="markingSubtitle"></p>
+      </div>
+      <button onclick="closeStudentMarking()" class="text-slate-400 hover:text-red-500 text-2xl font-bold">✕</button>
+    </div>
+
+    <div class="bg-slate-50 rounded-xl p-3 mb-3">
+      <div id="studentMarkSummary" class="text-sm font-semibold text-center"></div>
+    </div>
+
+    <div class="flex gap-2 mb-3 flex-wrap">
+      <button onclick="markAllRolls('P')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded-lg font-bold">✓ All Present</button>
+      <button onclick="markAllRolls('A')" class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs py-2 px-3 rounded-lg font-bold">✗ All Absent</button>
+      <button onclick="markAllRolls(null)" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white text-xs py-2 px-3 rounded-lg font-bold">🔄 Clear All</button>
+    </div>
+
+    <p class="text-xs text-slate-500 mb-2">Click each roll: <span class="bg-green-500 text-white px-1.5 py-0.5 rounded text-[10px]">✓ P</span> → <span class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[10px]">✗ A</span> → <span class="bg-slate-200 px-1.5 py-0.5 rounded text-[10px]">blank</span></p>
+
+    <div id="studentRollGrid" class="grid grid-cols-6 md:grid-cols-10 gap-2 mb-3 max-h-[50vh] overflow-y-auto p-1"></div>
+
+    <div class="flex gap-2">
+      <button onclick="closeStudentMarking()" class="flex-1 bg-slate-300 hover:bg-slate-400 text-slate-800 py-3 rounded-lg font-semibold">Cancel</button>
+      <button onclick="saveStudentMarks()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold">💾 Save Individual Marks</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STUDENT REPORT MODAL (List with %) ============ -->
+<div id="studentReportModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl p-5 w-full max-w-3xl my-4">
+    <div class="flex justify-between items-start mb-3">
+      <div>
+        <h3 class="text-lg font-bold text-slate-800" id="studentReportTitle">Student Report</h3>
+        <p class="text-xs text-slate-500" id="studentReportSubtitle"></p>
+      </div>
+      <button onclick="document.getElementById('studentReportModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 text-2xl font-bold">✕</button>
+    </div>
+    <div class="mb-3 p-2 bg-blue-50 rounded-lg text-xs text-slate-600 text-center">
+      🟢 ≥75% Good &nbsp;·&nbsp; 🟡 50-74% Warning &nbsp;·&nbsp; 🔴 <50% Critical &nbsp;·&nbsp; Click any roll for detail
+    </div>
+    <div id="studentReportList" class="grid md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto p-1"></div>
+  </div>
+</div>
+
+<!-- ============ STUDENT DETAIL MODAL (One student history) ============ -->
+<div id="studentDetailModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl p-5 w-full max-w-lg my-4">
+    <div class="flex justify-between items-start mb-3">
+      <div>
+        <h3 class="text-lg font-bold text-slate-800" id="detailTitle">Student Detail</h3>
+        <p class="text-xs text-slate-500" id="detailSubtitle"></p>
+      </div>
+      <button onclick="document.getElementById('studentDetailModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 text-2xl font-bold">✕</button>
+    </div>
+    <div id="detailSummary" class="mb-3"></div>
+    <h4 class="font-bold text-slate-800 text-sm mb-2">📅 Date-wise History</h4>
+    <div id="detailHistory" class="space-y-1 max-h-[40vh] overflow-y-auto pr-1"></div>
   </div>
 </div>
 
@@ -390,8 +471,319 @@ PRATIBHA_TIMETABLE.forEach(c => TIMETABLE.push(Object.assign({ teacherId:'pratib
 let currentUser = null;
 let activeClass = null;
 let capturedPhotoData = null;
+let originalPhotoData = null;
 let cameraStream = null;
 let attendance = {};
+
+// ===== AI CAMERA MODULE — START =====
+let aiModel = null;
+let aiDetectedCount = 0;
+let aiDetectionInProgress = false;
+
+ async function loadAIModel() {
+  if (aiModel) return aiModel;
+  try {
+    console.log('🔄 Loading AI model...');
+    aiModel = await cocoSsd.load({
+      base: 'lite_mobilenet_v2',
+      modelUrl: 'lib/model.json'
+    });
+    console.log('✅ AI Camera model loaded');
+    return aiModel;
+  } catch (e) {
+    console.warn('⚠️ AI model load failed:', e);
+    return null;
+  }
+}
+
+async function detectPersonsInPhoto(imageDataUrl) {
+  if (!aiModel) {
+    await loadAIModel();
+    if (!aiModel) return { count: 0, predictions: [], image: null };
+  }
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        const predictions = await aiModel.detect(img, 20, 0.4);
+        const persons = predictions.filter(p => p.class === 'person');
+        console.log('🤖 AI detected persons:', persons.length);
+        resolve({ count: persons.length, predictions: persons, image: img });
+      } catch (e) {
+        console.warn('AI detect error:', e);
+        resolve({ count: 0, predictions: [], image: null });
+      }
+    };
+    img.onerror = () => resolve({ count: 0, predictions: [], image: null });
+    img.src = imageDataUrl;
+  });
+}
+
+// Green rectangles + count badge draw karo
+function drawGreenBoxes(img, predictions) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  const scale = Math.max(canvas.width, canvas.height) / 800;
+  const lineWidth = Math.max(4, 6 * scale);
+  const fontSize = Math.max(14, 20 * scale);
+
+  predictions.forEach((p, idx) => {
+    const [x, y, w, h] = p.bbox;
+
+    // Main green rectangle
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = lineWidth;
+    ctx.strokeRect(x, y, w, h);
+
+    // Corner accents
+    const cornerLen = Math.min(w, h) * 0.2;
+    ctx.lineWidth = lineWidth * 1.8;
+    const corners = [
+      [[x, y + cornerLen], [x, y], [x + cornerLen, y]],
+      [[x + w - cornerLen, y], [x + w, y], [x + w, y + cornerLen]],
+      [[x + w, y + h - cornerLen], [x + w, y + h], [x + w - cornerLen, y + h]],
+      [[x + cornerLen, y + h], [x, y + h], [x, y + h - cornerLen]]
+    ];
+    corners.forEach(pts => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      ctx.lineTo(pts[1][0], pts[1][1]);
+      ctx.lineTo(pts[2][0], pts[2][1]);
+      ctx.stroke();
+    });
+
+    // Person label
+    const label = 'Person ' + (idx + 1) + ' · ' + Math.round(p.score * 100) + '%';
+    ctx.font = 'bold ' + fontSize + 'px Segoe UI, sans-serif';
+    const textW = ctx.measureText(label).width;
+    const labelH = fontSize + 8;
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(x, Math.max(0, y - labelH - 2), textW + 12, labelH);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(label, x + 6, Math.max(fontSize, y - 6));
+  });
+
+  // Top-left count badge
+  const hasPersons = predictions.length > 0;
+  const countLabel = '🤖 AI: ' + predictions.length + ' detected';
+  const badgeFontSize = fontSize + 4;
+  ctx.font = 'bold ' + badgeFontSize + 'px Segoe UI, sans-serif';
+  const cw = ctx.measureText(countLabel).width;
+  const ch = badgeFontSize + 16;
+  ctx.fillStyle = hasPersons ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+  ctx.fillRect(10, 10, cw + 20, ch);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(countLabel, 20, 10 + badgeFontSize + 4);
+
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+// ===== AI CAMERA MODULE — END =====
+// ===== STUDENT RECORDS MODULE — START =====
+let studentRecords = {};
+try { studentRecords = JSON.parse(localStorage.getItem('student_records_v1') || '{}'); } catch(e){ studentRecords = {}; }
+
+let editingStudentMarks = {};
+let editingStudentKey = null;
+let editingStudentDate = null;
+
+function saveStudentRecords() {
+  try { localStorage.setItem('student_records_v1', JSON.stringify(studentRecords)); } catch(e){}
+}
+
+function getStudentSubjectKey(className, subject) {
+  return className + '::' + subject;
+}
+
+function getClassRollCount(className) {
+  return CLASS_STRENGTH[className] || 60;
+}
+
+// ===== Open Marking Grid (called from studentCountSection) =====
+function openStudentMarking() {
+  if (!activeClass) { alert('No active class'); return; }
+  const className = activeClass.className;
+  const subject = activeClass.subject;
+  editingStudentKey = getStudentSubjectKey(className, subject);
+  editingStudentDate = today;
+
+  if (studentRecords[editingStudentKey] && studentRecords[editingStudentKey][today]) {
+    editingStudentMarks = Object.assign({}, studentRecords[editingStudentKey][today]);
+  } else {
+    editingStudentMarks = {};
+  }
+
+  document.getElementById('markingTitle').textContent = 'Mark Students — ' + className;
+  document.getElementById('markingSubtitle').textContent = subject + ' · ' + formatDate(new Date()) + ' · Roll 1 to ' + getClassRollCount(className);
+
+  renderStudentGrid();
+  document.getElementById('studentMarkingModal').classList.remove('hidden');
+}
+
+function renderStudentGrid() {
+  const total = getClassRollCount(activeClass.className);
+  const grid = document.getElementById('studentRollGrid');
+  let html = '';
+  for (let i = 1; i <= total; i++) {
+    const status = editingStudentMarks[String(i)] || '';
+    const cls = status === 'P' ? 'bg-green-500 text-white border-green-600' :
+                status === 'A' ? 'bg-red-500 text-white border-red-600' :
+                'bg-white text-slate-700 border-slate-300 hover:border-blue-400';
+    const icon = status === 'P' ? '✓' : status === 'A' ? '✗' : '·';
+    html += '<button onclick="toggleRollMark(' + i + ')" class="border-2 rounded-lg py-2 font-bold flex flex-col items-center justify-center transition hover:scale-105 ' + cls + '">' +
+      '<div class="text-sm">' + i + '</div>' +
+      '<div class="text-xs">' + icon + '</div>' +
+    '</button>';
+  }
+  grid.innerHTML = html;
+  updateStudentMarkSummary();
+}
+
+function toggleRollMark(roll) {
+  const s = editingStudentMarks[String(roll)] || '';
+  if (s === '') editingStudentMarks[String(roll)] = 'P';
+  else if (s === 'P') editingStudentMarks[String(roll)] = 'A';
+  else delete editingStudentMarks[String(roll)];
+  renderStudentGrid();
+}
+
+function markAllRolls(status) {
+  const total = getClassRollCount(activeClass.className);
+  editingStudentMarks = {};
+  if (status) {
+    for (let i = 1; i <= total; i++) editingStudentMarks[String(i)] = status;
+  }
+  renderStudentGrid();
+}
+
+function updateStudentMarkSummary() {
+  const total = getClassRollCount(activeClass.className);
+  let p = 0, a = 0;
+  for (let i = 1; i <= total; i++) {
+    const s = editingStudentMarks[String(i)];
+    if (s === 'P') p++;
+    else if (s === 'A') a++;
+  }
+  const unmarked = total - p - a;
+  document.getElementById('studentMarkSummary').innerHTML =
+    '<span class="text-green-600">✓ ' + p + ' present</span> · ' +
+    '<span class="text-red-600">✗ ' + a + ' absent</span> · ' +
+    '<span class="text-slate-500">' + unmarked + ' unmarked</span>' +
+    (aiDetectedCount > 0 ? ' · <span class="text-blue-600">🤖 AI: ' + aiDetectedCount + '</span>' : '');
+}
+
+function saveStudentMarks() {
+  if (!editingStudentKey) return;
+  studentRecords[editingStudentKey] = studentRecords[editingStudentKey] || {};
+  studentRecords[editingStudentKey][editingStudentDate] = Object.assign({}, editingStudentMarks);
+  saveStudentRecords();
+
+  let presentCount = 0;
+  Object.values(editingStudentMarks).forEach(v => { if (v === 'P') presentCount++; });
+  if (presentCount > 0) {
+    document.getElementById('presentStudents').value = presentCount;
+    updateAbsentInfo();
+  }
+
+  closeStudentMarking();
+  showToast('✓ Individual marks saved — ' + presentCount + ' present');
+}
+
+function closeStudentMarking() {
+  document.getElementById('studentMarkingModal').classList.add('hidden');
+  editingStudentMarks = {};
+  editingStudentKey = null;
+  editingStudentDate = null;
+}
+
+// ===== Student Report (list with %) =====
+function showStudentReport(className, subject) {
+  const key = getStudentSubjectKey(className, subject);
+  const records = studentRecords[key] || {};
+  const dates = Object.keys(records).sort().reverse();
+  const total = getClassRollCount(className);
+
+  const rollStats = {};
+  for (let i = 1; i <= total; i++) rollStats[i] = { present: 0, total: 0 };
+
+  dates.forEach(date => {
+    const dayMarks = records[date] || {};
+    for (let i = 1; i <= total; i++) {
+      const mark = dayMarks[String(i)];
+      if (mark === 'P' || mark === 'A') {
+        rollStats[i].total++;
+        if (mark === 'P') rollStats[i].present++;
+      }
+    }
+  });
+
+  const list = document.getElementById('studentReportList');
+  let html = '';
+  for (let i = 1; i <= total; i++) {
+    const stats = rollStats[i];
+    const pct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+    const color = pct >= 75 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600';
+    const bg = pct >= 75 ? 'bg-green-50 border-green-300' : pct >= 50 ? 'bg-amber-50 border-amber-300' : 'bg-red-50 border-red-300';
+    html += '<button onclick="showStudentDetail(\'' + className + '\', \'' + subject + '\', ' + i + ')" class="flex items-center justify-between p-3 ' + bg + ' border-2 rounded-lg hover:shadow-lg transition w-full text-left">' +
+      '<div class="flex items-center gap-3">' +
+        '<div class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">' + i + '</div>' +
+        '<div>' +
+          '<div class="font-bold text-slate-800">Roll ' + i + '</div>' +
+          '<div class="text-xs text-slate-500">' + stats.present + '/' + stats.total + ' classes attended</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="text-xl font-bold ' + color + '">' + pct + '%</div>' +
+    '</button>';
+  }
+  list.innerHTML = html;
+  document.getElementById('studentReportTitle').textContent = className + ' — ' + subject;
+  document.getElementById('studentReportSubtitle').textContent = dates.length + ' classes recorded · Click any roll for detail';
+  document.getElementById('studentReportModal').classList.remove('hidden');
+}
+
+// ===== One student's detailed history =====
+function showStudentDetail(className, subject, roll) {
+  const key = getStudentSubjectKey(className, subject);
+  const records = studentRecords[key] || {};
+  const dates = Object.keys(records).sort().reverse();
+
+  let present = 0, total = 0;
+  const history = [];
+  dates.forEach(date => {
+    const mark = records[date][String(roll)];
+    if (mark === 'P' || mark === 'A') {
+      total++;
+      if (mark === 'P') present++;
+      history.push({ date, mark });
+    }
+  });
+  const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+
+  document.getElementById('detailTitle').textContent = 'Roll ' + roll + ' — ' + className;
+  document.getElementById('detailSubtitle').textContent = subject;
+  document.getElementById('detailSummary').innerHTML =
+    '<div class="grid grid-cols-3 gap-2">' +
+      '<div class="bg-green-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + present + '</div><div class="text-xs">Present</div></div>' +
+      '<div class="bg-red-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + (total - present) + '</div><div class="text-xs">Absent</div></div>' +
+      '<div class="bg-blue-500 text-white rounded-xl p-3 text-center"><div class="text-2xl font-bold">' + pct + '%</div><div class="text-xs">Overall</div></div>' +
+    '</div>';
+
+  if (history.length === 0) {
+    document.getElementById('detailHistory').innerHTML = '<div class="text-center text-slate-400 py-6 text-sm">No records yet</div>';
+  } else {
+    document.getElementById('detailHistory').innerHTML = history.map(h =>
+      '<div class="flex items-center justify-between p-2 ' + (h.mark === 'P' ? 'bg-green-50' : 'bg-red-50') + ' rounded-lg">' +
+        '<div class="text-sm text-slate-700 font-semibold">' + h.date + '</div>' +
+        '<div class="text-sm font-bold ' + (h.mark === 'P' ? 'text-green-600' : 'text-red-600') + '">' + (h.mark === 'P' ? '✓ Present' : '✗ Absent') + '</div>' +
+      '</div>'
+    ).join('');
+  }
+  document.getElementById('studentDetailModal').classList.remove('hidden');
+}
+// ===== STUDENT RECORDS MODULE — END =====
 try { attendance = JSON.parse(localStorage.getItem('attendance_v8') || '{}'); } catch(e){ attendance = {}; }
 
 const today = new Date().toISOString().split('T')[0];
@@ -611,7 +1003,7 @@ function renderTeacherClasses(){
     }
     const doneBadge = isDone ? '<span class="bg-green-600 text-white text-xs px-2 py-1 rounded font-bold">✓ MARKED</span>' : '<span class="bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">PENDING</span>';
     const infoBlock = isDone ? '<div class="mt-3 flex items-center gap-3 flex-wrap"><div class="bg-white rounded-lg px-3 py-2 border-2 border-green-300"><div class="text-[10px] text-slate-500 font-semibold">STUDENTS PRESENT</div><div class="text-xl font-bold text-green-700">' + rec.presentStudents + ' <span class="text-sm text-slate-400">/ ' + rec.totalStudents + '</span></div></div><div class="text-xs text-slate-500"><div>📅 ' + rec.dateFormatted + '</div><div>⏱️ ' + rec.time + '</div></div></div>' : '';
-
+    const studentReportBtn = '<button onclick="event.stopPropagation(); showStudentReport(\'' + c.class.replace(/\'/g,'') + '\', \'' + c.subject.replace(/\'/g,'') + '\')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-bold w-full">📊 Student Report (% per roll)</button>';
     return '<div class="card p-4 rounded-xl border-2 ' + (isDone ? 'border-green-500 bg-green-50' : 'border-slate-200 bg-white') + '">' +
       '<div class="flex justify-between items-start flex-wrap gap-3">' +
       '<div class="flex-1 min-w-[200px]">' +
@@ -619,7 +1011,7 @@ function renderTeacherClasses(){
       '<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">' + c.class + '</span>' +
       '<span class="text-xs text-slate-500">Room ' + c.room + '</span>' + doneBadge + '</div>' +
       '<div class="font-semibold text-slate-800">' + c.subject + '</div>' +
-      '<div class="text-sm text-slate-600">⏰ ' + c.start + ' - ' + c.end + '</div>' + infoBlock + '</div>' +
+ '<div class="text-sm text-slate-600">⏰ ' + c.start + ' - ' + c.end + '</div>' + infoBlock + studentReportBtn + '</div>' +
       '<div class="flex gap-2 items-center">' + rightSide + '</div></div></div>';
   }).join('');
 }
@@ -643,11 +1035,16 @@ async function startCamera(){
 async function openSelfie(classKey, day, className, subject, room, time){
   activeClass = { classKey, day, className, subject, room, time };
   capturedPhotoData = null;
+  originalPhotoData = null;
+  aiDetectedCount = 0;
   document.getElementById('selfieTitle').textContent = className + ' — ' + subject;
   document.getElementById('selfieInfo').textContent = 'Room ' + room + ' • ' + time;
   document.getElementById('totalStudents').value = CLASS_STRENGTH[className] || 50;
   document.getElementById('presentStudents').value = '';
   document.getElementById('absentInfo').textContent = '';
+  document.getElementById('aiDetectedCount').textContent = '—';
+  document.getElementById('aiStatus').textContent = 'Analyze hone ka wait karo...';
+  document.getElementById('aiAlert').classList.add('hidden');
   resetCameraArea();
   document.getElementById('cameraArea').classList.remove('hidden');
   document.getElementById('previewArea').classList.add('hidden');
@@ -675,6 +1072,8 @@ function closeSelfie(){
   document.getElementById('studentCountSection').classList.add('hidden');
   document.getElementById('cameraArea').classList.remove('hidden');
   activeClass = null; capturedPhotoData = null;
+  originalPhotoData = null;
+  aiDetectedCount = 0;
 }
 function capturePhoto(){
   const video = document.getElementById('video');
@@ -696,6 +1095,7 @@ function capturePhoto(){
   ctx.fillStyle = '#a7f3d0'; ctx.font = '13px Segoe UI';
   ctx.fillText('Career Point Hamirpur · CSE • Room ' + activeClass.room, 15, canvas.height - bH + 76);
   capturedPhotoData = canvas.toDataURL('image/jpeg', 0.75);
+  originalPhotoData = capturedPhotoData;
   document.getElementById('capturedPhoto').src = capturedPhotoData;
   document.getElementById('cameraArea').classList.add('hidden');
   document.getElementById('previewArea').classList.remove('hidden');
@@ -709,6 +1109,8 @@ function retakePhoto(){
   document.getElementById('cameraArea').classList.remove('hidden');
   document.getElementById('captureBtn').classList.remove('hidden');
   capturedPhotoData = null;
+  originalPhotoData = null;
+  aiDetectedCount = 0;
   resetCameraArea();
   startCamera();
 }
@@ -717,18 +1119,118 @@ function donePhoto(){
   document.getElementById('studentCountSection').classList.remove('hidden');
   document.getElementById('saveBtn').classList.remove('hidden');
   setTimeout(() => document.getElementById('presentStudents').focus(), 100);
+
+  runAIDetection();
 }
+
+async function runAIDetection() {
+  if (!capturedPhotoData) return;
+  if (aiDetectionInProgress) return;
+  aiDetectionInProgress = true;
+  aiDetectedCount = 0;
+
+  document.getElementById('aiDetectedCount').textContent = '...';
+  document.getElementById('aiStatus').textContent = 'Analyzing photo...';
+  document.getElementById('aiAlert').classList.add('hidden');
+
+  // Original image use karo (annotated nahi, warna double boxes ban jayenge)
+  const baseImage = originalPhotoData || capturedPhotoData;
+  const result = await detectPersonsInPhoto(baseImage);
+  aiDetectedCount = result.count;
+
+  document.getElementById('aiDetectedCount').textContent = result.count;
+  document.getElementById('aiStatus').textContent = result.count + ' person(s) detected in photo';
+
+  // Green boxes draw karke preview update karo
+  if (result.image) {
+    const annotated = drawGreenBoxes(result.image, result.predictions);
+    document.getElementById('capturedPhoto').src = annotated;
+    capturedPhotoData = annotated;
+  }
+
+  aiDetectionInProgress = false;
+
+  const presentField = document.getElementById('presentStudents');
+  if (presentField && presentField.value !== '') {
+    compareAIvsReported();
+  }
+}
+
+async function recheckAI() {
+  if (aiDetectionInProgress) return;
+  await runAIDetection();
+}
+
 function updateAbsentInfo(){
   const t = parseInt(document.getElementById('totalStudents').value) || 0;
   const p = parseInt(document.getElementById('presentStudents').value) || 0;
   document.getElementById('absentInfo').innerHTML = p > 0 ? '<span class="text-red-600 font-semibold">Absent: ' + (t - p) + '</span> • <span class="text-green-600 font-semibold">Present: ' + p + '</span>' : '';
+
+  if (aiDetectedCount > 0) compareAIvsReported();
 }
+
+function compareAIvsReported() {
+  const reported = parseInt(document.getElementById('presentStudents').value) || 0;
+  const aiCount = aiDetectedCount;
+  const box = document.getElementById('aiAlert');
+  if (!box) return;
+
+  if (reported === 0 || document.getElementById('presentStudents').value === '') {
+    box.classList.add('hidden');
+    return;
+  }
+
+  const tolerance = Math.max(2, Math.round(aiCount * 0.05));
+  const diff = reported - aiCount;
+
+  if (Math.abs(diff) <= tolerance) {
+    box.className = 'mt-2 p-2 rounded-lg text-xs font-bold bg-green-100 text-green-700 border-2 border-green-400';
+    box.innerHTML = '✅ Verified — AI sees <b>' + aiCount + '</b>, Reported <b>' + reported + '</b> (within tolerance ±' + tolerance + ')';
+    box.classList.remove('hidden');
+  } else if (diff > tolerance) {
+    box.className = 'mt-2 p-2 rounded-lg text-xs font-bold bg-red-100 text-red-700 border-2 border-red-500';
+    box.innerHTML = '🚨 <b>FRAUD ALERT!</b> Teacher reported <b>' + reported + '</b> but AI sees only <b>' + aiCount + '</b>. Over-reporting by <b>' + diff + '</b>!<br><span class="text-[10px] font-normal">Save karte waqt count AI value (' + aiCount + ') pe force ho jayega.</span>';
+    box.classList.remove('hidden');
+  } else {
+    box.className = 'mt-2 p-2 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 border-2 border-amber-400';
+    box.innerHTML = '⚠️ AI sees more (<b>' + aiCount + '</b>) than you reported (<b>' + reported + '</b>). You may have missed some students.';
+    box.classList.remove('hidden');
+  }
+}
+
 function saveAttendance(){
   if (!capturedPhotoData) { alert('Capture photo first'); return; }
   const total = parseInt(document.getElementById('totalStudents').value) || 0;
-  const present = parseInt(document.getElementById('presentStudents').value);
+  let present = parseInt(document.getElementById('presentStudents').value);
   if (isNaN(present) || present < 0) { alert('Enter valid present count'); return; }
   if (present > total) { alert('Present cannot exceed ' + total); return; }
+
+  const aiCount = aiDetectedCount;
+  const tolerance = Math.max(2, Math.round(aiCount * 0.05));
+
+  if (aiCount > 0 && present > aiCount + tolerance) {
+    const confirmed = confirm(
+      '🚨 FRAUD DETECTED!\n\n' +
+      'Teacher reported: ' + present + '\n' +
+      'AI Camera detected: ' + aiCount + '\n' +
+      'Over-reporting by: ' + (present - aiCount) + ' students\n\n' +
+      'AI-verified count (' + aiCount + ') will be saved instead.\n\n' +
+      'Continue?'
+    );
+    if (!confirmed) return;
+    present = aiCount;
+    document.getElementById('presentStudents').value = aiCount;
+  } else if (aiCount > 0 && present < aiCount - tolerance) {
+    const confirmed = confirm(
+      '⚠️ NOTE:\n\n' +
+      'Teacher reported: ' + present + '\n' +
+      'AI Camera detected: ' + aiCount + '\n' +
+      'You may have missed some students.\n\n' +
+      'Continue with reported count (' + present + ')?'
+    );
+    if (!confirmed) return;
+  }
+
   const now = new Date();
   const key = currentUser.id + '_' + activeClass.day + '_' + activeClass.classKey;
   attendance[today] = attendance[today] || {};
@@ -738,12 +1240,14 @@ function saveAttendance(){
     subject: activeClass.subject, room: activeClass.room, timeSlot: activeClass.time,
     photo: capturedPhotoData, date: today, dateFormatted: formatDate(now), time: formatTime(now),
     timestamp: now.toISOString(), totalStudents: total, presentStudents: present,
-    absentStudents: total - present, status: 'present'
+    absentStudents: total - present, status: 'present',
+    aiDetectedCount: aiCount,
+    wasAICorrected: (aiCount > 0 && present === aiCount)
   };
   try { localStorage.setItem('attendance_v8', JSON.stringify(attendance)); } catch(e){}
   closeSelfie();
   renderTeacherClasses();
-  showToast('✓ Saved — ' + present + '/' + total);
+  showToast('✓ Saved — ' + present + '/' + total + (aiCount > 0 ? ' (AI: ' + aiCount + ')' : ''));
 }
 function retakeAttendance(classKey, day){
   const key = currentUser.id + '_' + day + '_' + classKey;
@@ -966,11 +1470,11 @@ function downloadDeanReport(){
     const s = getTeacherStatusToday(t.id);
     csv += '"' + t.name + '","' + t.dept + '","' + t.subject + '","' + s.status.toUpperCase() + '",' + s.done + ',' + s.total + '\n';
   });
-  csv += '\n\n=== DETAILED LOG ===\nTeacher,Class,Subject,Room,Date,Time,Present,Total,Absent\n';
+  csv += '\n\n=== DETAILED LOG ===\nTeacher,Class,Subject,Room,Date,Time,Present,Total,Absent,AI Detected\n';
   for (const dk in attendance) {
     for (const k in attendance[dk]) {
       const r = attendance[dk][k];
-      csv += '"' + r.teacherName + '","' + r.className + '","' + r.subject + '","' + r.room + '","' + r.dateFormatted + '","' + r.time + '",' + r.presentStudents + ',' + r.totalStudents + ',' + r.absentStudents + '\n';
+      csv += '"' + r.teacherName + '","' + r.className + '","' + r.subject + '","' + r.room + '","' + r.dateFormatted + '","' + r.time + '",' + r.presentStudents + ',' + r.totalStudents + ',' + r.absentStudents + ',' + (r.aiDetectedCount || 'N/A') + '\n';
     }
   }
   const blob = new Blob([csv], { type:'text/csv' });
@@ -984,15 +1488,26 @@ function openTimetable(){
   window.open(currentUser.id + '.html', '_blank');
 }
 
+// Refresh interval — 30s, tab hidden pe pause
 setInterval(() => {
+  if (document.hidden) return;
   if (!currentUser) return;
   if (!document.getElementById('welcomeScreen').classList.contains('hidden')) renderWelcomeData();
   else if (currentUser.role === 'teacher' && !document.getElementById('teacherDashboard').classList.contains('hidden')) renderTeacherClasses();
   else if (currentUser.role === 'hod' && !document.getElementById('hodDashboard').classList.contains('hidden')) renderHodDashboard();
   else if (currentUser.role === 'dean' && !document.getElementById('deanDashboard').classList.contains('hidden')) renderDeanDashboard();
-}, 10000);
+}, 30000);
+
+document.addEventListener('visibilitychange', function(){
+  if (!document.hidden && currentUser) {
+    if (!document.getElementById('welcomeScreen').classList.contains('hidden')) renderWelcomeData();
+  }
+});
 
 window.addEventListener('DOMContentLoaded', function(){
+  // AI model background preload
+  setTimeout(() => { loadAIModel(); }, 2000);
+
   renderTeacherList();
   const ps = document.getElementById('presentStudents');
   if (ps) ps.addEventListener('input', updateAbsentInfo);
@@ -1176,7 +1691,6 @@ window.addEventListener('DOMContentLoaded', function(){
 
 <!-- ================= NOTICE BOARD SYSTEM v2 ================= -->
 
-<!-- 1. NOTICE BANNER -->
 <div id="noticeBar" style="
   position:fixed;top:0;left:0;right:0;z-index:10000;
   transform:translateY(-130%);
@@ -1219,7 +1733,6 @@ window.addEventListener('DOMContentLoaded', function(){
   </div>
 </div>
 
-<!-- 2. BELL ICON WITH BADGE -->
 <button id="noticeBell" title="Notices" style="
   position:fixed;top:10px;right:62px;z-index:9999;
   width:44px;height:44px;border-radius:50%;
@@ -1242,7 +1755,6 @@ window.addEventListener('DOMContentLoaded', function(){
   ">0</span>
 </button>
 
-<!-- 3. WRITE NOTICE FAB -->
 <button id="noticeFab" title="Write Notice" style="
   position:fixed;bottom:20px;right:20px;z-index:9998;
   width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;
@@ -1251,7 +1763,6 @@ window.addEventListener('DOMContentLoaded', function(){
   display:grid;place-items:center;transition:transform .2s ease;
 ">📝</button>
 
-<!-- 4. NOTICES PANEL -->
 <div id="noticesPanel" style="
   position:fixed;inset:0;z-index:10002;display:none;
   align-items:flex-start;justify-content:center;padding:70px 16px 16px;
@@ -1280,7 +1791,6 @@ window.addEventListener('DOMContentLoaded', function(){
   </div>
 </div>
 
-<!-- 5. WRITE NOTICE MODAL -->
 <div id="noticeModal" style="
   position:fixed;inset:0;z-index:10003;display:none;
   align-items:center;justify-content:center;padding:16px;
@@ -1921,10 +2431,10 @@ window.addEventListener('DOMContentLoaded', function(){
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-    setInterval(renderThoughts, 10000);
+    // Speed fix: 30s + tab hidden check
+    setInterval(() => { if (!document.hidden) renderThoughts(); }, 30000);
   });
 })();
 </script>
 </body>
 </html>
- 
