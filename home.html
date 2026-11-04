@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
  <!-- AI Camera: TensorFlow.js + COCO-SSD (LOCAL — no CDN) -->
@@ -715,82 +715,116 @@ let currentUser = null;
 let activeClass = null;
 let capturedPhotoData = null;
 let originalPhotoData = null;
-let capturedCanvas = null;  // raw canvas for accurate AI detection
 let cameraStream = null;
-let currentFacingMode = 'user'; // 'user' = front, 'environment' = back
 let attendance = {};
 
 // ===== AI CAMERA MODULE — START =====
 let aiModel = null;
-let aiModelPromise = null;   // cache the load promise (no double-load)
 let aiDetectedCount = 0;
 let aiDetectionInProgress = false;
 
-async function loadAIModel() {
+ async function loadAIModel() {
   if (aiModel) return aiModel;
-  if (aiModelPromise) return aiModelPromise;
-  aiModelPromise = (async () => {
-    try {
-      console.log('🔄 Loading AI model...');
-      aiModel = await cocoSsd.load({
-        base: 'lite_mobilenet_v2',
-        modelUrl: 'lib/model.json'
-      });
-      console.log('✅ AI Camera model loaded');
-      return aiModel;
-    } catch (e) {
-      console.warn('⚠️ AI model load failed:', e);
-      return null;
-    }
-  })();
-  return aiModelPromise;
+  try {
+    console.log('🔄 Loading AI model...');
+    aiModel = await cocoSsd.load({
+      base: 'lite_mobilenet_v2',
+      modelUrl: 'lib/model.json'
+    });
+    console.log('✅ AI Camera model loaded');
+    return aiModel;
+  } catch (e) {
+    console.warn('⚠️ AI model load failed:', e);
+    return null;
+  }
 }
 
-/* Accepts: HTMLCanvasElement | HTMLImageElement | dataURL string.
-   Uses raw full-res canvas when available → much better detection. */
-async function detectPersonsInPhoto(source) {
+async function detectPersonsInPhoto(imageDataUrl) {
   if (!aiModel) {
     await loadAIModel();
-    if (!aiModel) return { count: 0, predictions: [] };
+    if (!aiModel) return { count: 0, predictions: [], image: null };
   }
   return new Promise((resolve) => {
-    const run = async (img) => {
+    const img = new Image();
+    img.onload = async () => {
       try {
-        // Higher resolution = better detection of small/back-row students
-        const MAX = 800;
-        let w = img.naturalWidth || img.width;
-        let h = img.naturalHeight || img.height;
-        if (w > MAX || h > MAX) {
-          const s = MAX / Math.max(w, h);
-          w = Math.round(w * s);
-          h = Math.round(h * s);
-        }
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-
-        // maxBoxes=50 (was 20), threshold=0.30 (was 0.40) → catches more students
-        const predictions = await aiModel.detect(c, 50, 0.30);
+        const predictions = await aiModel.detect(img, 20, 0.4);
         const persons = predictions.filter(p => p.class === 'person');
         console.log('🤖 AI detected persons:', persons.length);
-        resolve({ count: persons.length, predictions: persons });
+        resolve({ count: persons.length, predictions: persons, image: img });
       } catch (e) {
         console.warn('AI detect error:', e);
-        resolve({ count: 0, predictions: [] });
+        resolve({ count: 0, predictions: [], image: null });
       }
     };
-    if (typeof source === 'string') {
-      const img = new Image();
-      img.onload = () => run(img);
-      img.onerror = () => resolve({ count: 0, predictions: [] });
-      img.src = source;
-    } else {
-      run(source);
-    }
+    img.onerror = () => resolve({ count: 0, predictions: [], image: null });
+    img.src = imageDataUrl;
   });
 }
-// ===== AI CAMERA MODULE — END =====
 
+// Green rectangles + count badge draw karo
+function drawGreenBoxes(img, predictions) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  const scale = Math.max(canvas.width, canvas.height) / 800;
+  const lineWidth = Math.max(4, 6 * scale);
+  const fontSize = Math.max(14, 20 * scale);
+
+  predictions.forEach((p, idx) => {
+    const [x, y, w, h] = p.bbox;
+
+    // Main green rectangle
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = lineWidth;
+    ctx.strokeRect(x, y, w, h);
+
+    // Corner accents
+    const cornerLen = Math.min(w, h) * 0.2;
+    ctx.lineWidth = lineWidth * 1.8;
+    const corners = [
+      [[x, y + cornerLen], [x, y], [x + cornerLen, y]],
+      [[x + w - cornerLen, y], [x + w, y], [x + w, y + cornerLen]],
+      [[x + w, y + h - cornerLen], [x + w, y + h], [x + w - cornerLen, y + h]],
+      [[x + cornerLen, y + h], [x, y + h], [x, y + h - cornerLen]]
+    ];
+    corners.forEach(pts => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      ctx.lineTo(pts[1][0], pts[1][1]);
+      ctx.lineTo(pts[2][0], pts[2][1]);
+      ctx.stroke();
+    });
+
+    // Person label
+    const label = 'Person ' + (idx + 1) + ' · ' + Math.round(p.score * 100) + '%';
+    ctx.font = 'bold ' + fontSize + 'px Segoe UI, sans-serif';
+    const textW = ctx.measureText(label).width;
+    const labelH = fontSize + 8;
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(x, Math.max(0, y - labelH - 2), textW + 12, labelH);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(label, x + 6, Math.max(fontSize, y - 6));
+  });
+
+  // Top-left count badge
+  const hasPersons = predictions.length > 0;
+  const countLabel = '🤖 AI: ' + predictions.length + ' detected';
+  const badgeFontSize = fontSize + 4;
+  ctx.font = 'bold ' + badgeFontSize + 'px Segoe UI, sans-serif';
+  const cw = ctx.measureText(countLabel).width;
+  const ch = badgeFontSize + 16;
+  ctx.fillStyle = hasPersons ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+  ctx.fillRect(10, 10, cw + 20, ch);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(countLabel, 20, 10 + badgeFontSize + 4);
+
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+// ===== AI CAMERA MODULE — END =====
 // ===== STUDENT RECORDS MODULE — START =====
 let studentRecords = {};
 try { studentRecords = JSON.parse(localStorage.getItem('student_records_v1') || '{}'); } catch(e){ studentRecords = {}; }
@@ -811,6 +845,7 @@ function getClassRollCount(className) {
   return CLASS_STRENGTH[className] || 60;
 }
 
+// ===== Open Marking Grid (called from studentCountSection) =====
 function openStudentMarking() {
   if (!activeClass) { alert('No active class'); return; }
   const className = activeClass.className;
@@ -907,6 +942,7 @@ function closeStudentMarking() {
   editingStudentDate = null;
 }
 
+// ===== Student Report (list with %) =====
 function showStudentReport(className, subject) {
   const key = getStudentSubjectKey(className, subject);
   const records = studentRecords[key] || {};
@@ -951,6 +987,7 @@ function showStudentReport(className, subject) {
   document.getElementById('studentReportModal').classList.remove('hidden');
 }
 
+// ===== One student's detailed history =====
 function showStudentDetail(className, subject, roll) {
   const key = getStudentSubjectKey(className, subject);
   const records = studentRecords[key] || {};
@@ -990,7 +1027,6 @@ function showStudentDetail(className, subject, roll) {
   document.getElementById('studentDetailModal').classList.remove('hidden');
 }
 // ===== STUDENT RECORDS MODULE — END =====
-
 try { attendance = JSON.parse(localStorage.getItem('attendance_v8') || '{}'); } catch(e){ attendance = {}; }
 
 const today = new Date().toISOString().split('T')[0];
@@ -1223,70 +1259,26 @@ function renderTeacherClasses(){
   }).join('');
 }
 
- function resetCameraArea(){
+function resetCameraArea(){
   document.getElementById('cameraArea').innerHTML =
     '<video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>' +
     '<div class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE</div>' +
-    '<button id="switchCamBtn" onclick="switchCamera()" class="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-full font-bold shadow-lg flex items-center gap-1" title="Switch Camera">🔄 Front</button>' +
     '<div class="absolute bottom-2 left-2 right-2 bg-black bg-opacity-60 text-white text-xs p-2 rounded">📸 Take selfie with students in the frame</div>';
-  updateCameraSwitchButton();
 }
- async function startCamera(facingMode) {
-  if (facingMode) currentFacingMode = facingMode;
+async function startCamera(){
   if (!document.getElementById('video')) resetCameraArea();
-
-  // Stop old stream first so switching works cleanly
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
-
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
-    });
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} } });
     const v = document.getElementById('video');
-    if (v) {
-      v.srcObject = cameraStream;
-      // Mirror ONLY the front camera preview (natural selfie feel)
-      v.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'none';
-    }
-    updateCameraSwitchButton();
+    if (v) v.srcObject = cameraStream;
   } catch (err) {
-    // Fallback: try without facingMode (some devices have only 1 camera or restrict)
-    try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      const v = document.getElementById('video');
-      if (v) { v.srcObject = cameraStream; v.style.transform = 'none'; }
-      updateCameraSwitchButton();
-    } catch (err2) {
-      document.getElementById('cameraArea').innerHTML = '<div class="w-full h-full flex items-center justify-center text-white text-center p-4"><div><div class="text-4xl mb-2">📷</div><div class="text-sm">Camera not available — please run on Live Server (localhost)</div></div></div>';
-    }
+    document.getElementById('cameraArea').innerHTML = '<div class="w-full h-full flex items-center justify-center text-white text-center p-4"><div><div class="text-4xl mb-2">📷</div><div class="text-sm">Camera not available — please run on Live Server (localhost)</div></div></div>';
   }
-}
-
-async function switchCamera() {
-  const newMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-  await startCamera(newMode);
-}
-
-async function updateCameraSwitchButton() {
-  const btn = document.getElementById('switchCamBtn');
-  if (!btn) return;
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cams = devices.filter(d => d.kind === 'videoinput');
-    if (cams.length < 2) { btn.style.display = 'none'; return; }
-    btn.style.display = 'flex';
-  } catch (e) { /* keep visible if check fails */ }
-  btn.innerHTML = (currentFacingMode === 'user') ? '🔄 Front' : '🔄 Back';
 }
 async function openSelfie(classKey, day, className, subject, room, time){
   activeClass = { classKey, day, className, subject, room, time };
   capturedPhotoData = null;
   originalPhotoData = null;
-  capturedCanvas = null;
   aiDetectedCount = 0;
   document.getElementById('selfieTitle').textContent = className + ' — ' + subject;
   document.getElementById('selfieInfo').textContent = 'Room ' + room + ' • ' + time;
@@ -1307,8 +1299,7 @@ async function openSelfie(classKey, day, className, subject, room, time){
   updateSelfieDT();
   if (window.selfieInterval) clearInterval(window.selfieInterval);
   window.selfieInterval = setInterval(updateSelfieDT, 1000);
-   currentFacingMode = 'user'; // always start fresh with front camera
-  await startCamera('user');
+  await startCamera();
 }
 function updateSelfieDT(){
   const n = new Date();
@@ -1325,7 +1316,6 @@ function closeSelfie(){
   document.getElementById('cameraArea').classList.remove('hidden');
   activeClass = null; capturedPhotoData = null;
   originalPhotoData = null;
-  capturedCanvas = null;
   aiDetectedCount = 0;
 }
 function capturePhoto(){
@@ -1347,11 +1337,7 @@ function capturePhoto(){
   ctx.fillText('Date: ' + ds + '   Time: ' + ts, 15, canvas.height - bH + 52);
   ctx.fillStyle = '#a7f3d0'; ctx.font = '13px Segoe UI';
   ctx.fillText('Career Point Hamirpur · CSE • Room ' + activeClass.room, 15, canvas.height - bH + 76);
-
-  // Save raw canvas reference for AI detection (better quality than compressed JPEG)
-  capturedCanvas = canvas;
-
-  capturedPhotoData = canvas.toDataURL('image/jpeg', 0.65); // smaller = faster
+  capturedPhotoData = canvas.toDataURL('image/jpeg', 0.75);
   originalPhotoData = capturedPhotoData;
   document.getElementById('capturedPhoto').src = capturedPhotoData;
   document.getElementById('cameraArea').classList.add('hidden');
@@ -1367,16 +1353,16 @@ function retakePhoto(){
   document.getElementById('captureBtn').classList.remove('hidden');
   capturedPhotoData = null;
   originalPhotoData = null;
-  capturedCanvas = null;
   aiDetectedCount = 0;
-     resetCameraArea();
-  startCamera(currentFacingMode); // preserve chosen camera`
+  resetCameraArea();
+  startCamera();
 }
 function donePhoto(){
   document.getElementById('checkDoneSection').classList.add('hidden');
   document.getElementById('studentCountSection').classList.remove('hidden');
   document.getElementById('saveBtn').classList.remove('hidden');
   setTimeout(() => document.getElementById('presentStudents').focus(), 100);
+
   runAIDetection();
 }
 
@@ -1390,18 +1376,20 @@ async function runAIDetection() {
   document.getElementById('aiStatus').textContent = 'Analyzing photo...';
   document.getElementById('aiAlert').classList.add('hidden');
 
-  // Prefer raw canvas (full quality) → better detection accuracy
-  const source = capturedCanvas || originalPhotoData || capturedPhotoData;
-  const result = await detectPersonsInPhoto(source);
+  // Original image use karo (annotated nahi, warna double boxes ban jayenge)
+  const baseImage = originalPhotoData || capturedPhotoData;
+  const result = await detectPersonsInPhoto(baseImage);
   aiDetectedCount = result.count;
 
   document.getElementById('aiDetectedCount').textContent = result.count;
   document.getElementById('aiStatus').textContent = result.count + ' person(s) detected in photo';
 
-  // Photo stays as original — no green boxes drawn
-  const cleanPhoto = originalPhotoData || capturedPhotoData;
-  document.getElementById('capturedPhoto').src = cleanPhoto;
-  capturedPhotoData = cleanPhoto;
+  // Green boxes draw karke preview update karo
+  if (result.image) {
+    const annotated = drawGreenBoxes(result.image, result.predictions);
+    document.getElementById('capturedPhoto').src = annotated;
+    capturedPhotoData = annotated;
+  }
 
   aiDetectionInProgress = false;
 
@@ -1444,7 +1432,7 @@ function compareAIvsReported() {
     box.classList.remove('hidden');
   } else if (diff > tolerance) {
     box.className = 'mt-2 p-2 rounded-lg text-xs font-bold bg-red-100 text-red-700 border-2 border-red-500';
-    box.innerHTML = '🚨 <b>FRAUD ALERT!</b> Teacher reported <b>' + reported + '</b> but AI sees only <b>' + aiCount + '</b>. Over-reporting by <b>' + diff + '</b>!<br><span class="text-[10px] font-normal">Save karte waqt count AI value (' + aiCount + ') pe force ho jayega.</span>';
+    box.innerHTML = '🚨 <b>FRAUD ALERT!</b> Teacher reported <b>' + reported + '</b> but AI sees only <b>' + aiCount + '</b>. Over-reporting by <b>' + diff + '</b>!<br><span class="text-[10px] font-normal">   </span>';
     box.classList.remove('hidden');
   } else {
     box.className = 'mt-2 p-2 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 border-2 border-amber-400';
@@ -1743,7 +1731,7 @@ function openTimetable(){
   window.open(currentUser.id + '.html', '_blank');
 }
 
-// Refresh interval — 60s (lighter on CPU), pause when tab hidden
+// Refresh interval — 30s, tab hidden pe pause
 setInterval(() => {
   if (document.hidden) return;
   if (!currentUser) return;
@@ -1751,7 +1739,7 @@ setInterval(() => {
   else if (currentUser.role === 'teacher' && !document.getElementById('teacherDashboard').classList.contains('hidden')) renderTeacherClasses();
   else if (currentUser.role === 'hod' && !document.getElementById('hodDashboard').classList.contains('hidden')) renderHodDashboard();
   else if (currentUser.role === 'dean' && !document.getElementById('deanDashboard').classList.contains('hidden')) renderDeanDashboard();
-}, 60000);
+}, 30000);
 
 document.addEventListener('visibilitychange', function(){
   if (!document.hidden && currentUser) {
@@ -1760,7 +1748,8 @@ document.addEventListener('visibilitychange', function(){
 });
 
 window.addEventListener('DOMContentLoaded', function(){
-  // NOTE: AI model is now lazy-loaded on first capture (removed 2s preload → faster startup)
+  // AI model background preload
+  setTimeout(() => { loadAIModel(); }, 2000);
 
   renderTeacherList();
   const ps = document.getElementById('presentStudents');
@@ -2709,8 +2698,8 @@ window.addEventListener('DOMContentLoaded', function(){
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-    // Speed fix: 60s + tab hidden check
-    setInterval(() => { if (!document.hidden) renderThoughts(); }, 60000);
+    // Speed fix: 30s + tab hidden check
+    setInterval(() => { if (!document.hidden) renderThoughts(); }, 30000);
   });
 })();
 </script>
